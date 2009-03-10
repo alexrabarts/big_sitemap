@@ -48,7 +48,7 @@ Sitemaps will be split across several files if more than 50,000 records are retu
   BigSitemap.new(:base_url => 'http://example.com', :max_per_sitemap => 1000) # Max of 1000 URLs per Sitemap
 </pre>
 
-The database is queries in batches to prevent large SQL select statements from locking the database for too long.  By default, the batch size is 1001 (not 1000 due to an obscure bug in DataMapper that appears when an offset of 37000 is used).  You can customize the batch size with the <code>:batch_size</code> option:
+The database is queried in batches to prevent large SQL select statements from locking the database for too long.  By default, the batch size is 1001 (not 1000 due to an obscure bug in DataMapper that appears when an offset of 37000 is used).  You can customize the batch size with the <code>:batch_size</code> option:
 
 <pre>
   BigSitemap.new(:base_url => 'http://example.com, :batch_size => 5000) # Database is queried in batches of 5,000
