@@ -1,15 +1,15 @@
 # BigSitemap
 
-## DESCRIPTION:
+## DESCRIPTION
 
 BigSitemap is a Sitemap generator specifically designed for large sites (although it works equally well with small sites).  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries so it doesn't take your site down, can be set up with just a few lines of code and is compatible with just about any framework.
 
-## INSTALL:
+## INSTALL
 
 * Via git: git clone git://github.com/alexrabarts/big_sitemap.git
 * Via gem: gem install alexrabarts-big_sitemap -s http://gems.github.com
 
-## SYNOPSIS:
+## SYNOPSIS
 
 The minimum required to generate a sitemap is:
 
@@ -21,7 +21,11 @@ The minimum required to generate a sitemap is:
 
 You can put this in a rake/thor task and create a cron job to run it periodically.  It should be enough for most Rails/Merb applications.
 
+### Find Methods
+
 Your models must provide either a <code>find_for_sitemap</code> or <code>all</code> class method that returns the instances that are to be included in the sitemap.  Additionally, you models must provide a <code>count_for_sitemap</code> or <code>count</code> class method that returns a count of the instances to be included.  If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you don't need to do anything unless you want to include a subset of records.  If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
+
+### URL Format
 
 To generate the URLs, BigSitemap will combine the constructor arguments with the <code>to_param</code> method of each instance returned (provided by ActiveRecord but not DataMapper).  If this method is not present, <code>id</code> will be used.  The URL is constructed as:
 
@@ -29,6 +33,8 @@ To generate the URLs, BigSitemap will combine the constructor arguments with the
   ":base_url/:path/:to_param" # (if to_param exists)
   ":base_url/:path/:id"       # (if to_param does not exist)
 </pre>
+
+### Sitemap Location
 
 BigSitemap knows about the document root of Rails and Merb.  If you are using another framework then you can specify the document root with the <code>:document_root</code> option.  e.g.:
 
@@ -42,17 +48,23 @@ By default, the sitemap files are created under <code>/sitemaps</code>.  You can
   BigSitemap.new(:base_url => 'http://example.com', :path => 'google-sitemaps') # places Sitemaps under /google-sitemaps
 </pre>
 
+### Maximum Number of URLs
+
 Sitemaps will be split across several files if more than 50,000 records are returned.  You can customize this limit with the <code>:max_per_sitemap</code> option:
 
 <pre>
   BigSitemap.new(:base_url => 'http://example.com', :max_per_sitemap => 1000) # Max of 1000 URLs per Sitemap
 </pre>
 
+### Batched Database Queries
+
 The database is queried in batches to prevent large SQL select statements from locking the database for too long.  By default, the batch size is 1001 (not 1000 due to an obscure bug in DataMapper that appears when an offset of 37000 is used).  You can customize the batch size with the <code>:batch_size</code> option:
 
 <pre>
   BigSitemap.new(:base_url => 'http://example.com, :batch_size => 5000) # Database is queried in batches of 5,000
 </pre>
+
+### Search Engine Notification
 
 Google, Yahoo!, MSN and Ask are pinged once the Sitemap files are generated.  You can turn one or more of these off:
 
@@ -72,7 +84,7 @@ You must provide an App ID in order to ping Yahoo! (more info at http://develope
   BigSitemap.new(:base_url => 'http://example.com', :yahoo_app_id => 'myYahooAppId') # Yahoo! will now be pinged
 </pre>
 
-## LIMITATIONS:
+## LIMITATIONS
 
 If your database is likely to shrink during the time it takes to create the sitemap then you might run into problems (the final, batched SQL select will overrun by setting a limit that is too large since it is calculated from the count, which is queried at the very beginning).  Patches welcome!
 
