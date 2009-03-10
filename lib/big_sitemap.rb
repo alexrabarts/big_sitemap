@@ -6,7 +6,7 @@ require 'extlib'
 
 class BigSitemap
   def initialize(options)
-    document_root  = options.delete(:document_root)
+    document_root = options.delete(:document_root)
 
     if document_root.nil?
       if defined? RAILS_ROOT
@@ -37,9 +37,7 @@ class BigSitemap
       'Batch size (:batch_size) must be less than or equal to maximum URLs per sitemap (:max_per_sitemap)'
     ) if @batch_size > @max_per_sitemap
 
-    unless File.exists? @file_path
-      Dir.mkdir(@file_path)
-    end
+    Dir.mkdir(@file_path) unless File.exists? @file_path
   end
 
   def add(options)
@@ -101,11 +99,9 @@ class BigSitemap
               param_method = pick_method(r, [:to_param, :id])
               raise ArgumentError, "#{klass} must provide a to_param instance method" if param_method.nil?
 
-              path = {:url => "#{source[:path]}/#{r.send(param_method)}", :last_mod => last_mod}
-
               xml.url do
-                xml.loc("#{@base_url}/#{path[:url]}")
-                xml.lastmod(path[:last_mod].strftime('%Y-%m-%d')) unless path[:last_mod].nil?
+                xml.loc("#{@base_url}/#{source[:path]}/#{r.send(param_method)}")
+                xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
                 xml.changefreq('weekly')
               end
             end
