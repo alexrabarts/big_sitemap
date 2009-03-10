@@ -46,9 +46,6 @@ class BigSitemap
   end
 
   def generate
-    paths    = []
-    sitemaps = []
-
     @sources.each do |source|
       klass = source[:model]
 
