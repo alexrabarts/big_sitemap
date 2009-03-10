@@ -11,7 +11,7 @@ BigSitemap is a Sitemap generator specifically designed for large sites (althoug
 
 ## SYNOPSIS:
 
-The minimum required to generated a sitemap is:
+The minimum required to generate a sitemap is:
 
 <pre>
   sitemap = BigSitemap.new(:base_url => 'http://example.com')
