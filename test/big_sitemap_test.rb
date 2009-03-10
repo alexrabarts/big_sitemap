@@ -10,6 +10,11 @@ class BigSitemapTest < Test::Unit::TestCase
     delete_tmp_files
   end
 
+  should 'raise an error if the :base_url option is not specified' do
+    assert_nothing_raised { BigSitemap.new(:base_url => 'http://example.com', :document_root => tmp_dir) }
+    assert_raise(ArgumentError) { BigSitemap.new(:document_root => tmp_dir) }
+  end
+
   should 'generate a sitemap index file' do
     generate_sitemap_files
     assert File.exists?(sitemaps_index_file)
@@ -130,7 +135,7 @@ class BigSitemapTest < Test::Unit::TestCase
     def add_model(options={})
       num_items = options.delete(:num_items) || default_num_items
       TestModel.stubs(:num_items).returns(num_items)
-      @sitemap.add({:model => TestModel, :path => '/test_controller'}.update(options))
+      @sitemap.add({:model => TestModel, :path => 'test_controller'}.update(options))
     end
 
     def default_num_items

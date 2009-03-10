@@ -22,9 +22,15 @@ class BigSitemap
     @max_per_sitemap = options.delete(:max_per_sitemap) || 50000
     @batch_size      = options.delete(:batch_size) || 1001 # TODO: Set this to 1000 once DM offset 37000 bug is fixed
     @web_path        = options.delete(:path) || 'sitemaps'
-    @update_google   = options[:update_google].nil? ? true : options.delete(:update_google)
+    @ping_google     = options[:ping_google].nil? ? true : options.delete(:ping_google)
+    @ping_yahoo      = options[:ping_yahoo].nil? ? true : options.delete(:ping_yahoo)
+    @yahoo_app_id    = options.delete(:yahoo_app_id)
+    @ping_msn        = options[:ping_msn].nil? ? true : options.delete(:ping_msn)
+    @ping_ask        = options[:ping_ask].nil? ? true : options.delete(:ping_ask)
     @file_path       = "#{document_root}/#{@web_path}"
     @sources         = []
+
+    raise ArgumentError, "Base URL must be specified with the :base_url option" if @base_url.nil?
 
     raise(
       ArgumentError,
@@ -98,7 +104,7 @@ class BigSitemap
               path = {:url => "#{source[:path]}/#{r.send(param_method)}", :last_mod => last_mod}
 
               xml.url do
-                xml.loc(@base_url + path[:url])
+                xml.loc("#{@base_url}/#{path[:url]}")
                 xml.lastmod(path[:last_mod].strftime('%Y-%m-%d')) unless path[:last_mod].nil?
                 xml.changefreq('weekly')
               end
@@ -112,7 +118,7 @@ class BigSitemap
     end
 
     generate_sitemap_index
-    update_google if @update_google
+    ping_search_engines
   end
 
   private
@@ -161,9 +167,34 @@ class BigSitemap
       gz.close
     end
 
+    def sitemap_uri
+      URI.escape("#{@base_url}/#{@web_path}/#{sitemap_index_filename}")
+    end
+
     # Notify Google of the new sitemap index file
-    def update_google
-      sitemap_uri = URI.escape("#{@base_url}/#{@web_path}/#{sitemap_index_filename}")
+    def ping_google
       Net::HTTP.get('www.google.com', "/webmasters/tools/ping?sitemap=#{sitemap_uri}")
+    end
+
+    # Notify Yahoo! of the new sitemap index file
+    def ping_yahoo
+      Net::HTTP.get('search.yahooapis.com', "/SiteExplorerService/V1/updateNotification?appid=#{@yahoo_app_id}&url=#{sitemap_uri}")
+    end
+
+    # Notify MSN of the new sitemap index file
+    def ping_msn
+      Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
+    end
+
+    # Notify Ask of the new sitemap index file
+    def ping_ask
+      Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
+    end
+
+    def ping_search_engines
+      ping_google if @ping_google
+      ping_yahoo if @ping_yahoo && @yahoo_app_id
+      ping_msn if @ping_msn
+      ping_ask if @ping_ask
     end
 end
