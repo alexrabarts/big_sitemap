@@ -48,6 +48,10 @@ By default, the sitemap files are created under <code>/sitemaps</code>.  You can
   BigSitemap.new(:base_url => 'http://example.com', :path => 'google-sitemaps') # places Sitemaps under /google-sitemaps
 </pre>
 
+### Cleaning the Sitemaps Directory
+
+Calling the <code>clean</code> method will remove all files from the Sitemaps directory.
+
 ### Maximum Number of URLs
 
 Sitemaps will be split across several files if more than 50,000 records are returned.  You can customize this limit with the <code>:max_per_sitemap</code> option:

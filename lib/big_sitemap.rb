@@ -45,6 +45,15 @@ class BigSitemap
     @sources << options
   end
 
+  def clean
+    unless @file_path.nil?
+      Dir.foreach(@file_path) do |f|
+        f = "#{@file_path}/#{f}"
+        File.delete(f) if File.file?(f)
+      end
+    end
+  end
+
   def generate
     @sources.each do |source|
       klass = source[:model]

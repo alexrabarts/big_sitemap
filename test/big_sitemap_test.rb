@@ -35,6 +35,13 @@ class BigSitemapTest < Test::Unit::TestCase
     assert !File.exists?(third_sitemaps_model_file), "#{third_sitemaps_model_file} does not exist"
   end
 
+  should 'clean all sitemap files' do
+    generate_sitemap_files
+    assert Dir.entries(sitemaps_dir).size > 2, "#{sitemaps_dir} is not empty" # ['.', '..'].size == 2
+    @sitemap.clean
+    assert_equal 2, Dir.entries(sitemaps_dir).size, "#{sitemaps_dir} is empty"
+  end
+
   context 'Sitemap index file' do
     should 'contain one sitemapindex element' do
       generate_sitemap_files
