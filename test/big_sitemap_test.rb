@@ -114,6 +114,27 @@ class BigSitemapTest < Test::Unit::TestCase
     end
   end
 
+  context 'add method' do
+    should 'be chainable' do
+      create_sitemap
+      assert_equal BigSitemap, @sitemap.add({:model => TestModel, :path => 'test_controller'}).class
+    end
+  end
+
+  context 'clean method' do
+    should 'be chainable' do
+      create_sitemap
+      assert_equal BigSitemap, @sitemap.clean.class
+    end
+  end
+
+  context 'generate method' do
+    should 'be chainable' do
+      create_sitemap
+      assert_equal BigSitemap, @sitemap.generate.class
+    end
+  end
+
   private
     def delete_tmp_files
       FileUtils.rm_rf(sitemaps_dir)

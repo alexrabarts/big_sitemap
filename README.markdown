@@ -14,12 +14,16 @@ BigSitemap is a Sitemap generator specifically designed for large sites (althoug
 The minimum required to generate a sitemap is:
 
 <pre>
+  BigSitemap.new(:base_url => 'http://example.com').add(:model => MyModel, :path => 'my_controller').generate
+</pre>
+
+You can put this in a rake/thor task and create a cron job to run it periodically.  It should be enough for most Rails/Merb applications.  Note that the methods are chainable, although you can call them on an instance variable if you prefer:
+
+<pre>
   sitemap = BigSitemap.new(:base_url => 'http://example.com')
   sitemap.add(:model => MyModel, :path => 'my_controller')
   sitemap.generate
 </pre>
-
-You can put this in a rake/thor task and create a cron job to run it periodically.  It should be enough for most Rails/Merb applications.
 
 ### Find Methods
 

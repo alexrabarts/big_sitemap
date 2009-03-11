@@ -43,6 +43,7 @@ class BigSitemap
   def add(options)
     raise ArgumentError, ':model and :path options must be provided' unless options[:model] && options[:path]
     @sources << options
+    self # Chainable
   end
 
   def clean
@@ -52,6 +53,7 @@ class BigSitemap
         File.delete(f) if File.file?(f)
       end
     end
+    self # Chainable
   end
 
   def generate
@@ -121,6 +123,7 @@ class BigSitemap
 
     generate_sitemap_index
     ping_search_engines
+    self # Chainable
   end
 
   private
