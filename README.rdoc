@@ -2,7 +2,7 @@
 
 == DESCRIPTION
 
-BigSitemap is a Sitemap generator specifically designed for large sites (although it works equally well with small sites).  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries so it doesn't take your site down, can be set up with just a few lines of code and is compatible with just about any framework.
+BigSitemap is a Sitemap (http://sitemaps.org) generator specifically designed for large sites (although it works equally well with small sites).  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries so it doesn't take your site down, can be set up with just a few lines of code and is compatible with just about any framework.
 
 == INSTALL
 
@@ -20,22 +20,27 @@ The minimum required to generate a sitemap is:
 
   BigSitemap.new(:base_url => 'http://example.com').add(:model => MyModel, :path => 'my_controller').generate
 
-You can put this in a rake/thor task and create a cron job to run it periodically.  It should be enough for most Rails/Merb applications.  Note that the methods are chainable, although you can call them on an instance variable if you prefer:
+You can put this in a rake/thor task and create a cron job to run it periodically.  It should be enough for most Rails/Merb applications.  You can add more models by further calls to the <code>add</code> method.  Note that the methods are chainable, although you can call them on an instance variable if you prefer:
 
   sitemap = BigSitemap.new(:base_url => 'http://example.com')
-  sitemap.add(:model => MyModel, :path => 'my_controller')
+  sitemap.add(:model => Posts,    :path => 'articles')
+  sitemap.add(:model => Comments, :path => 'comments')
   sitemap.generate
 
 === Find Methods
 
-Your models must provide either a <code>find_for_sitemap</code> or <code>all</code> class method that returns the instances that are to be included in the sitemap.  Additionally, you models must provide a <code>count_for_sitemap</code> or <code>count</code> class method that returns a count of the instances to be included.  If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you don't need to do anything unless you want to include a subset of records.  If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
+Your models must provide either a <code>find_for_sitemap</code> or <code>all</code> class method that returns the instances that are to be included in the sitemap.
+
+Additionally, you models must provide a <code>count_for_sitemap</code> or <code>count</code> class method that returns a count of the instances to be included.
+
+If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you don't need to do anything unless you want to include a subset of records.  If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
 
 === URL Format
 
 To generate the URLs, BigSitemap will combine the constructor arguments with the <code>to_param</code> method of each instance returned (provided by ActiveRecord but not DataMapper).  If this method is not present, <code>id</code> will be used.  The URL is constructed as:
 
-  ":base_url/:path/:to_param" # (if to_param exists)
-  ":base_url/:path/:id"       # (if to_param does not exist)
+  :base_url/:path/:to_param (if to_param exists)
+  :base_url/:path/:id       (if to_param does not exist)
 
 === Sitemap Location
 
@@ -59,9 +64,9 @@ Sitemaps will be split across several files if more than 50,000 records are retu
 
 === Batched Database Queries
 
-The database is queried in batches to prevent large SQL select statements from locking the database for too long.  By default, the batch size is 1001 (not 1000 due to an obscure bug in DataMapper that appears when an offset of 37000 is used).  You can customize the batch size with the <code>:batch_size</code> option:
+The database is queried in batches to prevent large SQL select statements from locking the database for too long.  By default, the batch size is 1001 (not 1000 due to an obscure bug in DataMapper).  You can customize the batch size with the <code>:batch_size</code> option:
 
-  BigSitemap.new(:base_url => 'http://example.com, :batch_size => 5000) # Database is queried in batches of 5,000
+  BigSitemap.new(:base_url => 'http://example.com', :batch_size => 5000) # Database is queried in batches of 5,000
 
 === Search Engine Notification
 
@@ -85,7 +90,8 @@ If your database is likely to shrink during the time it takes to create the site
 
 == TODO
 
-* Support for priority and changefreq (currently hard-coded to 'weekly')
+* Support for <code>priority</code>
+* Support for <code>changefreq</code> (currently hard-coded to <code>weekly</code>)
 
 == CREDITS
 
@@ -95,3 +101,4 @@ http://scoop.cheerfactory.co.uk/2008/02/26/google-sitemap-generator/
 == COPYRIGHT
 
 Copyright (c) 2009 Stateless Systems (http://statelesssystems.com). See LICENSE for details.
+
