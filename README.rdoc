@@ -6,11 +6,11 @@ BigSitemap is a Sitemap generator specifically designed for large sites (althoug
 
 == INSTALL
 
-* Via git:
+Via git:
 
   git clone git://github.com/alexrabarts/big_sitemap.git
 
-* Via gem:
+Via gem:
 
   gem install alexrabarts-big_sitemap -s http://gems.github.com
 
