@@ -8,6 +8,10 @@ class TestModel
       self.find_for_sitemap.size
     end
 
+    def num_items
+      10
+    end
+
     def find_for_sitemap(options={})
       instances = []
       num_times = options.delete(:limit) || self.num_items

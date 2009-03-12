@@ -21,7 +21,7 @@ class BigSitemap
     @base_url        = options.delete(:base_url)
     @max_per_sitemap = options.delete(:max_per_sitemap) || 50000
     @batch_size      = options.delete(:batch_size) || 1001 # TODO: Set this to 1000 once DM offset 37000 bug is fixed
-    @web_path        = options.delete(:path) || 'sitemaps'
+    @web_path        = strip_leading_slash(options.delete(:path) || 'sitemaps')
     @ping_google     = options[:ping_google].nil? ? true : options.delete(:ping_google)
     @ping_yahoo      = options[:ping_yahoo].nil? ? true : options.delete(:ping_yahoo)
     @yahoo_app_id    = options.delete(:yahoo_app_id)
@@ -42,7 +42,7 @@ class BigSitemap
 
   def add(options)
     raise ArgumentError, ':model and :path options must be provided' unless options[:model] && options[:path]
-    @sources << options
+    @sources << options.update(:path => strip_leading_slash(options[:path]))
     self # Chainable
   end
 
@@ -127,6 +127,10 @@ class BigSitemap
   end
 
   private
+    def strip_leading_slash(str)
+      str.sub(/^\//, '')
+    end
+
     def pick_method(klass, candidates)
       method = nil
       candidates.each do |candidate|

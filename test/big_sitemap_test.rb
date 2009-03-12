@@ -112,12 +112,21 @@ class BigSitemapTest < Test::Unit::TestCase
       assert_equal 1, num_elements(first_sitemaps_model_file, 'changefreq')
       assert_equal 1, num_elements(second_sitemaps_model_file, 'changefreq')
     end
+
+    should 'strip leading slashes from controller paths' do
+      create_sitemap
+      @sitemap.add(:model => TestModel, :path => '/test_controller').generate
+      assert(
+        !elements(single_sitemaps_model_file, 'loc').first.text.match(/\/\/test_controller\//),
+        'URL does not contain a double-slash before the controller path'
+      )
+    end
   end
 
   context 'add method' do
     should 'be chainable' do
       create_sitemap
-      assert_equal BigSitemap, @sitemap.add({:model => TestModel, :path => 'test_controller'}).class
+      assert_equal BigSitemap, @sitemap.add(:model => TestModel, :path => 'test_controller').class
     end
   end
 
@@ -198,8 +207,12 @@ class BigSitemapTest < Test::Unit::TestCase
       {'s' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
     end
 
-    def num_elements(filename, el)
+    def elements(filename, el)
       data = Nokogiri::XML.parse(Zlib::GzipReader.open(filename).read)
-      data.search("//s:#{el}", ns).size
+      data.search("//s:#{el}", ns)
+    end
+
+    def num_elements(filename, el)
+      elements(filename, el).size
     end
 end
