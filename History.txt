@@ -1,3 +1,11 @@
+=== 0.2.1 / 2009-03-12
+
+* Normalize path arguments so it no longer matters whether a leading slash is used or not
+
+=== 0.2.0 / 2009-03-11
+
+* Methods are now chainable
+
 === 0.1.4 / 2009-03-11
 
 * Add clean method to clear out Sitemaps directory
