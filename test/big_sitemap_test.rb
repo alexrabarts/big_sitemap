@@ -32,14 +32,13 @@ class BigSitemapTest < Test::Unit::TestCase
     create_sitemap
     add_model
     @sitemap.generate
-    assert File.exists?(single_sitemaps_model_file), "#{single_sitemaps_model_file} exists"
+    assert File.exists?(first_sitemaps_model_file), "#{first_sitemaps_model_file} exists"
   end
 
   should 'generate two sitemap model files' do
     generate_two_model_sitemap_files
     assert File.exists?(first_sitemaps_model_file), "#{first_sitemaps_model_file} exists"
     assert File.exists?(second_sitemaps_model_file), "#{second_sitemaps_model_file} exists"
-    third_sitemaps_model_file = "#{sitemaps_dir}/sitemap_test_model_3.xml.gz"
     assert !File.exists?(third_sitemaps_model_file), "#{third_sitemaps_model_file} does not exist"
   end
 
@@ -83,90 +82,90 @@ class BigSitemapTest < Test::Unit::TestCase
   context 'Sitemap model file' do
     should 'contain one urlset element' do
       generate_one_sitemap_model_file
-      assert_equal 1, num_elements(single_sitemaps_model_file, 'urlset')
+      assert_equal 1, num_elements(first_sitemaps_model_file, 'urlset')
     end
 
     should 'contain several loc elements' do
       generate_one_sitemap_model_file
-      assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'loc')
+      assert_equal default_num_items, num_elements(first_sitemaps_model_file, 'loc')
     end
 
     should 'contain several lastmod elements' do
       generate_one_sitemap_model_file
-      assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'lastmod')
+      assert_equal default_num_items, num_elements(first_sitemaps_model_file, 'lastmod')
     end
 
     should 'contain several changefreq elements' do
       generate_one_sitemap_model_file
-      assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'changefreq')
+      assert_equal default_num_items, num_elements(first_sitemaps_model_file, 'changefreq')
     end
 
     should 'contain several priority elements' do
       generate_one_sitemap_model_file(:priority => 0.2)
-      assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'priority')
+      assert_equal default_num_items, num_elements(first_sitemaps_model_file, 'priority')
     end
 
     should 'have a change frequency of weekly by default' do
       generate_one_sitemap_model_file
-      assert_equal 'weekly', elements(single_sitemaps_model_file, 'changefreq').first.text
+      assert_equal 'weekly', elements(first_sitemaps_model_file, 'changefreq').first.text
     end
 
     should 'have a change frequency of daily' do
       generate_one_sitemap_model_file(:change_frequency => 'daily')
-      assert_equal 'daily', elements(single_sitemaps_model_file, 'changefreq').first.text
+      assert_equal 'daily', elements(first_sitemaps_model_file, 'changefreq').first.text
     end
 
     should 'be able to use a lambda to specify change frequency' do
       generate_one_sitemap_model_file(:change_frequency => lambda {|m| m.change_frequency})
-      assert_equal TestModel.new.change_frequency, elements(single_sitemaps_model_file, 'changefreq').first.text
+      assert_equal TestModel.new.change_frequency, elements(first_sitemaps_model_file, 'changefreq').first.text
     end
 
     should 'have a priority of 0.2' do
       generate_one_sitemap_model_file(:priority => 0.2)
-      assert_equal '0.2', elements(single_sitemaps_model_file, 'priority').first.text
+      assert_equal '0.2', elements(first_sitemaps_model_file, 'priority').first.text
     end
 
     should 'be able to use a lambda to specify priority' do
       generate_one_sitemap_model_file(:priority => lambda {|m| m.priority})
-      assert_equal TestModel.new.priority.to_s, elements(single_sitemaps_model_file, 'priority').first.text
+      assert_equal TestModel.new.priority.to_s, elements(first_sitemaps_model_file, 'priority').first.text
     end
 
-    should 'contain one loc element' do
+    should 'contain two loc element' do
       generate_two_model_sitemap_files
-      assert_equal 1, num_elements(first_sitemaps_model_file, 'loc')
-      assert_equal 1, num_elements(second_sitemaps_model_file, 'loc')
+      assert_equal 2, num_elements(first_sitemaps_model_file, 'loc')
+      assert_equal 2, num_elements(second_sitemaps_model_file, 'loc')
     end
 
-    should 'contain one lastmod element' do
+    should 'contain two lastmod element' do
       generate_two_model_sitemap_files
-      assert_equal 1, num_elements(first_sitemaps_model_file, 'lastmod')
-      assert_equal 1, num_elements(second_sitemaps_model_file, 'lastmod')
+      assert_equal 2, num_elements(first_sitemaps_model_file, 'lastmod')
+      assert_equal 2, num_elements(second_sitemaps_model_file, 'lastmod')
     end
 
-    should 'contain one changefreq element' do
+    should 'contain two changefreq elements' do
       generate_two_model_sitemap_files
-      assert_equal 1, num_elements(first_sitemaps_model_file, 'changefreq')
-      assert_equal 1, num_elements(second_sitemaps_model_file, 'changefreq')
+      assert_equal 2, num_elements(first_sitemaps_model_file, 'changefreq')
+      assert_equal 2, num_elements(second_sitemaps_model_file, 'changefreq')
     end
 
-    should 'contain one priority element' do
+    should 'contain two priority element' do
       generate_two_model_sitemap_files(:priority => 0.2)
-      assert_equal 1, num_elements(first_sitemaps_model_file, 'priority')
-      assert_equal 1, num_elements(second_sitemaps_model_file, 'priority')
+      assert_equal 2, num_elements(first_sitemaps_model_file, 'priority')
+      assert_equal 2, num_elements(second_sitemaps_model_file, 'priority')
     end
 
     should 'strip leading slashes from controller paths' do
       create_sitemap
       @sitemap.add(TestModel, :path => '/test_controller').generate
       assert(
-        !elements(single_sitemaps_model_file, 'loc').first.text.match(/\/\/test_controller\//),
+        !elements(first_sitemaps_model_file, 'loc').first.text.match(/\/\/test_controller\//),
         'URL does not contain a double-slash before the controller path'
       )
     end
 
     should 'not be gzipped' do
       generate_one_sitemap_model_file(:gzip => false)
-      assert File.exists?(unzipped_single_sitemaps_model_file)
+      assert File.exists?(unzipped_first_sitemaps_model_file)
     end
   end
 
@@ -228,8 +227,8 @@ class BigSitemapTest < Test::Unit::TestCase
     def generate_two_model_sitemap_files(options={})
       change_frequency = options.delete(:change_frequency)
       priority         = options.delete(:priority)
-      create_sitemap(options.merge(:max_per_sitemap => 1, :batch_size => 1))
-      add_model(:num_items => 2, :change_frequency => change_frequency, :priority => priority)
+      create_sitemap(options.merge(:max_per_sitemap => 2, :batch_size => 1))
+      add_model(:num_items => 4, :change_frequency => change_frequency, :priority => priority)
       @sitemap.generate
     end
 
@@ -251,20 +250,20 @@ class BigSitemapTest < Test::Unit::TestCase
       "#{sitemaps_dir}/sitemap_index.xml"
     end
 
-    def single_sitemaps_model_file
-      "#{unzipped_single_sitemaps_model_file}.gz"
-    end
-
-    def unzipped_single_sitemaps_model_file
+    def unzipped_first_sitemaps_model_file
       "#{sitemaps_dir}/sitemap_test_models.xml"
     end
 
     def first_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_models_1.xml.gz"
+      "#{sitemaps_dir}/sitemap_test_models.xml.gz"
     end
 
     def second_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_models_2.xml.gz"
+      "#{sitemaps_dir}/sitemap_test_models_1.xml.gz"
+    end
+
+    def third_sitemaps_model_file
+      "#{sitemaps_dir}/sitemap_test_model_2.xml.gz"
     end
 
     def sitemaps_dir

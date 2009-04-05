@@ -1,11 +1,10 @@
 require 'uri'
-require 'zlib'
-require 'builder'
+require 'big_sitemap/builder'
 require 'extlib'
 
 class BigSitemap
   DEFAULTS = {
-    :max_per_sitemap => 50000,
+    :max_per_sitemap => Builder::MAX_URLS,
     :batch_size      => 1001,
     :path            => 'sitemaps',
     :gzip            => true,
@@ -29,6 +28,10 @@ class BigSitemap
 
     # Use Rails' default_url_options if available
     @default_url_options = defined?(Rails) ? default_url_options : {}
+
+    if @options[:max_per_sitemap] <= 1
+      raise ArgumentError, '":max_per_sitemap" must be greater than 1'
+    end
 
     if @options[:url_options]
       @default_url_options.update @options[:url_options]
@@ -79,71 +82,55 @@ class BigSitemap
 
   def generate
     for model, options in @sources
-      count_method = pick_method(model, COUNT_METHODS)
-      find_method  = pick_method(model, FIND_METHODS)
-      raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
-      raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
+      with_sitemap(Extlib::Inflection::tableize(model.to_s)) do |sitemap|
+        count_method = pick_method(model, COUNT_METHODS)
+        find_method  = pick_method(model, FIND_METHODS)
+        raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
+        raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-      count        = model.send(count_method)
-      num_sitemaps = 1
-      num_batches  = 1
+        count        = model.send(count_method)
+        num_sitemaps = 1
+        num_batches  = 1
 
-      if count > @options[:batch_size]
-        num_batches  = (count.to_f / @options[:batch_size].to_f).ceil
-        num_sitemaps = (count.to_f / @options[:max_per_sitemap].to_f).ceil
-      end
-      batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
+        if count > @options[:batch_size]
+          num_batches  = (count.to_f / @options[:batch_size].to_f).ceil
+          num_sitemaps = (count.to_f / @options[:max_per_sitemap].to_f).ceil
+        end
+        batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
-      find_options = options.dup
+        find_options = options.dup
 
-      for sitemap_num in 1..num_sitemaps
-        # Work out the start and end batch numbers for this sitemap
-        batch_num_start = sitemap_num == 1 ? 1 : ((sitemap_num * batches_per_sitemap).ceil - batches_per_sitemap + 1).to_i
-        batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
+        for sitemap_num in 1..num_sitemaps
+          # Work out the start and end batch numbers for this sitemap
+          batch_num_start = sitemap_num == 1 ? 1 : ((sitemap_num * batches_per_sitemap).ceil - batches_per_sitemap + 1).to_i
+          batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
 
-        # Stream XML output to a file
-        filename = "sitemap_#{Extlib::Inflection::tableize(model.to_s)}"
-        filename << "_#{sitemap_num}" if num_sitemaps > 1
-
-        f = xml_open(filename)
-
-        xml = Builder::XmlMarkup.new(:target => f)
-        xml.instruct!
-        xml.urlset(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
           for batch_num in batch_num_start..batch_num_end
             offset       = ((batch_num - 1) * @options[:batch_size])
             limit        = (count - offset) < @options[:batch_size] ? (count - offset - 1) : @options[:batch_size]
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
 
-            model.send(find_method, find_options).each do |r|
-              last_mod_method = pick_method(r, TIMESTAMP_METHODS)
-              last_mod = last_mod_method.nil? ? Time.now : r.send(last_mod_method)
+            model.send(find_method, find_options).each do |record|
+              last_mod_method = pick_method(record, TIMESTAMP_METHODS)
+              last_mod = last_mod_method.nil? ? Time.now : record.send(last_mod_method)
 
-              param_method = pick_method(r, PARAM_METHODS)
+              param_method = pick_method(record, PARAM_METHODS)
 
-              xml.url do
-                location = defined?(Rails) ?
-                  polymorphic_url(r) :
-                  "#{root_url}/#{strip_leading_slash(options[:path])}/#{r.send(param_method)}"
-                xml.loc(location)
+              location = defined?(Rails) ?
+                polymorphic_url(record) :
+                "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
 
-                xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
+              change_frequency = options[:change_frequency] || 'weekly'
+              freq = change_frequency.is_a?(Proc) ? change_frequency.call(record) : change_frequency
 
-                change_frequency = options[:change_frequency] || 'weekly'
-                xml.changefreq(change_frequency.is_a?(Proc) ? change_frequency.call(r) : change_frequency)
+              priority = options[:priority]
+              pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
-                priority = options[:priority]
-                unless priority.nil?
-                  xml.priority(priority.is_a?(Proc) ? priority.call(r) : priority)
-                end
-              end
+              sitemap.add_url!(location, last_mod, freq, pri)
             end
           end
         end
-
-        f.close
       end
-
     end
 
     generate_sitemap_index
@@ -193,6 +180,25 @@ class BigSitemap
 
   private
 
+  def with_sitemap(name, options={})
+    options[:index] = name == 'index'
+    options[:filename] = "#{@file_path}/sitemap_#{name}"
+    options[:max_urls] = @options[:max_per_sitemap]
+
+    unless options[:gzip] = @options[:gzip]
+      options[:indent] = 2
+    end
+
+    sitemap = Builder.new(options)
+
+    begin
+      yield sitemap
+    ensure
+      sitemap.close!
+      @sitemap_files.concat sitemap.paths!
+    end
+  end
+
   def strip_leading_slash(str)
     str.sub(/^\//, '')
   end
@@ -208,40 +214,15 @@ class BigSitemap
     method
   end
 
-  def xml_open(filename)
-    filename << '.xml'
-    filename << '.gz' if @options[:gzip]
-
-    file = File.open("#{@file_path}/#{filename}", 'w+')
-
-    @sitemap_files << file.path
-
-    writer = @options[:gzip] ? Zlib::GzipWriter.new(file) : file
-
-    if block_given?
-      yield writer
-      writer.close
-    end
-
-    writer
-  end
-
   def url_for_sitemap(path)
     "#{root_url}/#{File.basename(path)}"
   end
 
   # Create a sitemap index document
   def generate_sitemap_index
-    xml_open 'sitemap_index' do |file|
-      xml = Builder::XmlMarkup.new(:target => file)
-      xml.instruct!
-      xml.sitemapindex(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
-        for path in @sitemap_files[0..-2]
-          xml.sitemap do
-            xml.loc(url_for_sitemap(path))
-            xml.lastmod(Time.now.strftime('%Y-%m-%d'))
-          end
-        end
+    with_sitemap 'index' do |sitemap|
+      for path in @sitemap_files
+        sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
       end
     end
   end
