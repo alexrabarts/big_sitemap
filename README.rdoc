@@ -67,6 +67,15 @@ To ping search engines, call <code>ping_search_engines</code> after you generate
   sitemap.generate
   sitemap.ping_search_engines
 
+=== Change Frequency and Priority
+
+You can control "changefreq" and "priority" values for each record individually by passing lambdas instead of fixed values:
+
+  sitemap.add(Posts,
+    :change_frequency => lambda {|post| ... },
+    :priority         => lambda {|post| ... }
+  )
+
 === Find Methods
 
 Your models must provide either a <code>find_for_sitemap</code> or <code>all</code> class method that returns the instances that are to be included in the sitemap.

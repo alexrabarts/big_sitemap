@@ -3,6 +3,14 @@ class TestModel
     object_id
   end
 
+  def change_frequency
+    'monthly'
+  end
+
+  def priority
+    0.8
+  end
+
   class << self
     def count_for_sitemap
       self.find_for_sitemap.size

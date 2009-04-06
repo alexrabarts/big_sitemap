@@ -109,9 +109,16 @@ class BigSitemap
 
               xml.url do
                 xml.loc("#{@base_url}/#{strip_leading_slash(options[:path])}/#{r.send(param_method)}")
+
                 xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
-                xml.changefreq(options[:change_frequency] || 'weekly')
-                xml.priority(options[:priority]) unless options[:priority].nil?
+
+                change_frequency = options[:change_frequency] || 'weekly'
+                xml.changefreq(change_frequency.is_a?(Proc) ? change_frequency.call(r) : change_frequency)
+
+                priority = options[:priority]
+                unless priority.nil?
+                  xml.priority(priority.is_a?(Proc) ? priority.call(r) : priority)
+                end
               end
             end
           end
@@ -194,10 +201,6 @@ class BigSitemap
 
   def url_for_sitemap(path)
     "#{@base_url}/#{File.basename(path)}"
-  end
-
-  def sitemap_index_filename
-    'sitemap_index'
   end
 
   # Create a sitemap index document

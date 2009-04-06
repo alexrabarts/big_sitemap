@@ -108,9 +108,19 @@ class BigSitemapTest < Test::Unit::TestCase
       assert_equal 'daily', elements(single_sitemaps_model_file, 'changefreq').first.text
     end
 
+    should 'be able to use a lambda to specify change frequency' do
+      generate_one_sitemap_model_file(:change_frequency => lambda {|m| m.change_frequency})
+      assert_equal TestModel.new.change_frequency, elements(single_sitemaps_model_file, 'changefreq').first.text
+    end
+
     should 'have a priority of 0.2' do
       generate_one_sitemap_model_file(:priority => 0.2)
       assert_equal '0.2', elements(single_sitemaps_model_file, 'priority').first.text
+    end
+
+    should 'be able to use a lambda to specify priority' do
+      generate_one_sitemap_model_file(:priority => lambda {|m| m.priority})
+      assert_equal TestModel.new.priority.to_s, elements(single_sitemaps_model_file, 'priority').first.text
     end
 
     should 'contain one loc element' do
