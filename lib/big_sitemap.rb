@@ -113,7 +113,6 @@ class BigSitemap
               last_mod = last_mod_method.nil? ? Time.now : r.send(last_mod_method)
 
               param_method = pick_method(r, PARAM_METHODS)
-              raise ArgumentError, "#{klass} must provide a to_param instance method" if param_method.nil?
 
               xml.url do
                 xml.loc("#{@base_url}/#{strip_leading_slash(source[:path])}/#{r.send(param_method)}")
