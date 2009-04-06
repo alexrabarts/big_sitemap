@@ -15,6 +15,14 @@ class BigSitemapTest < Test::Unit::TestCase
     assert_raise(ArgumentError) { BigSitemap.new(:document_root => tmp_dir) }
   end
 
+  should 'generate the same base URL' do
+    options = {:document_root => tmp_dir}
+    assert_equal(
+      BigSitemap.new(options.merge(:base_url => 'http://example.com')).root_url,
+      BigSitemap.new(options.merge(:url_options => {:host => 'example.com'})).root_url
+    )
+  end
+
   should 'generate a sitemap index file' do
     generate_sitemap_files
     assert File.exists?(sitemaps_index_file)

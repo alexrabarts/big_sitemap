@@ -22,11 +22,23 @@ class BigSitemap
   TIMESTAMP_METHODS = [:updated_at, :updated_on, :updated, :created_at, :created_on, :created]
   PARAM_METHODS     = [:to_param, :id]
 
+  include ActionController::UrlWriter if defined? Rails
+
   def initialize(options)
     @options = DEFAULTS.merge options
 
-    unless @options[:base_url]
-      raise ArgumentError, 'Base URL must be specified with the ":base_url" option'
+    # Use Rails' default_url_options if available
+    @default_url_options = defined?(Rails) ? default_url_options : {}
+
+    if @options[:url_options]
+      @default_url_options.update @options[:url_options]
+    elsif @options[:base_url]
+      uri = URI.parse(@options[:base_url])
+      @default_url_options[:host]     = uri.host
+      @default_url_options[:port]     = uri.port
+      @default_url_options[:protocol] = uri.scheme
+    else
+      raise ArgumentError, 'you must specify either ":url_options" hash or ":base_url" string'
     end
 
     if @options[:batch_size] > @options[:max_per_sitemap]
@@ -108,7 +120,10 @@ class BigSitemap
               param_method = pick_method(r, PARAM_METHODS)
 
               xml.url do
-                xml.loc("#{@base_url}/#{strip_leading_slash(options[:path])}/#{r.send(param_method)}")
+                location = defined?(Rails) ?
+                  polymorphic_url(r) :
+                  "#{root_url}/#{strip_leading_slash(options[:path])}/#{r.send(param_method)}"
+                xml.loc(location)
 
                 xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
 
@@ -164,6 +179,16 @@ class BigSitemap
     end
   end
 
+  def root_url
+    @root_url ||= begin
+      url = ''
+      url << (@default_url_options[:protocol] || 'http')
+      url << '://' unless url.match('://')
+      url << @default_url_options[:host]
+      url << ":#{port}" if port = @default_url_options[:port] and port != 80
+    end
+  end
+
   private
 
   def strip_leading_slash(str)
@@ -200,7 +225,7 @@ class BigSitemap
   end
 
   def url_for_sitemap(path)
-    "#{@base_url}/#{File.basename(path)}"
+    "#{root_url}/#{File.basename(path)}"
   end
 
   # Create a sitemap index document

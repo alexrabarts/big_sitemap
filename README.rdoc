@@ -4,7 +4,7 @@ BigSitemap is a Sitemap (http://sitemaps.org) generator suitable for application
 
 BigSitemap is best run periodically through a Rake/Thor task.
 
-  sitemap = BigSitemap.new(:base_url => 'http://example.com')
+  sitemap = BigSitemap.new(:url_options => {:host => 'example.com'})
 
   # Add a model
   sitemap.add Product
@@ -27,7 +27,7 @@ The code above will create a minimum of three files:
 
 If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_products_1.xml.gz</code>, <code>sitemap_products_2.xml.gz</code>, &#133;).
 
-The URLs for each database record are generated in the form:
+If you're using Rails then the URLs for each database record are generated with the <code>polymorphic_url</code> helper.  That means that the URL for a record will be exactly what you would expect: generated with respect to the routing setup of your app.  In other contexts where this helper isn't available, the URLs are generated in the form:
 
   :base_url/:path/:to_param
 
@@ -43,7 +43,8 @@ Via gem:
 
 === Options
 
-  * <code>:base_url</code> -- string e.g. 'http://example.com'
+  * <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
+  * <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. "https://example.com:8080/"
   * <code>:document_root</code> -- string defaults to <code>Rails.root</code> or <code>Merb.root</code> if available
   * <code>:path</code> -- string defaults to 'sitemaps', which places sitemap files under the <code>/sitemaps</code> directory
   * <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
@@ -58,7 +59,7 @@ Via gem:
 
 You can chain methods together.  You could even get away with as little code as:
 
-  BigSitemap.new(:base_url => 'http://example.com').add(Post).generate
+  BigSitemap.new(:url_options => {:host => 'example.com'}).add(Post).generate
 
 === Pinging Search Engines
 
@@ -91,6 +92,10 @@ Calling the <code>clean</code> method will remove all files from the Sitemaps di
 == Limitations
 
 If your database is likely to shrink during the time it takes to create the sitemap then you might run into problems (the final, batched SQL select will overrun by setting a limit that is too large since it is calculated from the count, which is queried at the very beginning).  Patches welcome!
+
+== TODO
+
+Tests for Rails components.
 
 == Credits
 
