@@ -11,6 +11,7 @@ BigSitemap is best run periodically through a Rake/Thor task.
 
   # Add another model with some options
   sitemap.add(Post, {
+    :conditions       => {:published => true},
     :path             => 'articles',
     :change_frequency => 'daily',
     :priority         => 0.5

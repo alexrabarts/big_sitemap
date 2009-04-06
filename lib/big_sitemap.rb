@@ -94,6 +94,8 @@ class BigSitemap
       end
       batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
+      find_options = options.dup
+
       for sitemap_num in 1..num_sitemaps
         # Work out the start and end batch numbers for this sitemap
         batch_num_start = sitemap_num == 1 ? 1 : ((sitemap_num * batches_per_sitemap).ceil - batches_per_sitemap + 1).to_i
@@ -111,7 +113,7 @@ class BigSitemap
           for batch_num in batch_num_start..batch_num_end
             offset       = ((batch_num - 1) * @options[:batch_size])
             limit        = (count - offset) < @options[:batch_size] ? (count - offset - 1) : @options[:batch_size]
-            find_options = num_batches > 1 ? {:limit => limit, :offset => offset} : {}
+            find_options.update(:limit => limit, :offset => offset) if num_batches > 1
 
             model.send(find_method, find_options).each do |r|
               last_mod_method = pick_method(r, TIMESTAMP_METHODS)
