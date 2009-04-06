@@ -5,55 +5,61 @@ require 'builder'
 require 'extlib'
 
 class BigSitemap
-  def initialize(options)
-    document_root = options.delete(:document_root)
+  DEFAULTS = {
+    :max_per_sitemap => 50000,
+    :batch_size      => 1001,
+    :path            => 'sitemaps',
 
-    if document_root.nil?
-      if defined? RAILS_ROOT
-        document_root = "#{RAILS_ROOT}/public"
+    # opinionated
+    :ping_google => true,
+    :ping_yahoo  => false, # needs :yahoo_app_id
+    :ping_msn    => false,
+    :ping_ask    => false
+  }
+
+  def initialize(options)
+    @options = DEFAULTS.merge options
+
+    unless @options[:base_url]
+      raise ArgumentError, 'Base URL must be specified with the ":base_url" option'
+    end
+
+    if @options[:batch_size] > @options[:max_per_sitemap]
+      raise ArgumentError, '":batch_size" must be less than ":max_per_sitemap"'
+    end
+
+    @options[:document_root] ||= begin
+      if defined? Rails
+        "#{Rails.root}/public"
       elsif defined? Merb
-        document_root = "#{Merb.root}/public"
+        "#{Merb.root}/public"
       end
     end
 
-    raise ArgumentError, 'Document root must be specified with the :document_root option' if document_root.nil?
+    unless @options[:document_root]
+      raise ArgumentError, 'Document root must be specified with the ":document_root" option'
+    end
 
-    @base_url        = options.delete(:base_url)
-    @max_per_sitemap = options.delete(:max_per_sitemap) || 50000
-    @batch_size      = options.delete(:batch_size) || 1001 # TODO: Set this to 1000 once DM offset 37000 bug is fixed
-    @web_path        = strip_leading_slash(options.delete(:path) || 'sitemaps')
-    @ping_google     = options[:ping_google].nil? ? true : options.delete(:ping_google)
-    @ping_yahoo      = options[:ping_yahoo].nil? ? true : options.delete(:ping_yahoo)
-    @yahoo_app_id    = options.delete(:yahoo_app_id)
-    @ping_msn        = options[:ping_msn].nil? ? true : options.delete(:ping_msn)
-    @ping_ask        = options[:ping_ask].nil? ? true : options.delete(:ping_ask)
-    @file_path       = "#{document_root}/#{@web_path}"
-    @sources         = []
-
-    raise ArgumentError, "Base URL must be specified with the :base_url option" if @base_url.nil?
-
-    raise(
-      ArgumentError,
-      'Batch size (:batch_size) must be less than or equal to maximum URLs per sitemap (:max_per_sitemap)'
-    ) if @batch_size > @max_per_sitemap
-
+    @file_path = "#{@options[:document_root]}/#{strip_leading_slash(@options[:path])}"
     Dir.mkdir(@file_path) unless File.exists? @file_path
+
+    @sources = []
   end
 
   def add(options)
-    raise ArgumentError, ':model and :path options must be provided' unless options[:model] && options[:path]
-    @sources << options.update(:path => strip_leading_slash(options[:path]))
-    self # Chainable
+    unless options[:model] and options[:path]
+      raise ArgumentError, 'please provide ":model" and ":path"'
+    end
+
+    @sources << options.dup
+    return self
   end
 
   def clean
-    unless @file_path.nil?
-      Dir.foreach(@file_path) do |f|
-        f = "#{@file_path}/#{f}"
-        File.delete(f) if File.file?(f)
-      end
+    Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"].each do |file|
+      FileUtils.rm file
     end
-    self # Chainable
+    return self
   end
 
   def generate
@@ -69,9 +75,9 @@ class BigSitemap
       num_sitemaps = 1
       num_batches  = 1
 
-      if count > @batch_size
-        num_batches  = (count.to_f / @batch_size.to_f).ceil
-        num_sitemaps = (count.to_f / @max_per_sitemap.to_f).ceil
+      if count > @options[:batch_size]
+        num_batches  = (count.to_f / @options[:batch_size].to_f).ceil
+        num_sitemaps = (count.to_f / @options[:max_per_sitemap].to_f).ceil
       end
       batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
@@ -93,8 +99,8 @@ class BigSitemap
         xml.instruct!
         xml.urlset(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
           for batch_num in batch_num_start..batch_num_end
-            offset       = ((batch_num - 1) * @batch_size)
-            limit        = (count - offset) < @batch_size ? (count - offset - 1) : @batch_size
+            offset       = ((batch_num - 1) * @options[:batch_size])
+            limit        = (count - offset) < @options[:batch_size] ? (count - offset - 1) : @options[:batch_size]
             find_options = num_batches > 1 ? {:limit => limit, :offset => offset} : {}
 
             klass.send(find_method, find_options).each do |r|
@@ -108,7 +114,7 @@ class BigSitemap
               raise ArgumentError, "#{klass} must provide a to_param instance method" if param_method.nil?
 
               xml.url do
-                xml.loc("#{@base_url}/#{source[:path]}/#{r.send(param_method)}")
+                xml.loc("#{@base_url}/#{strip_leading_slash(source[:path])}/#{r.send(param_method)}")
                 xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
                 xml.changefreq('weekly')
               end

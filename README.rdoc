@@ -98,6 +98,8 @@ If your database is likely to shrink during the time it takes to create the site
 Thanks to Alastair Brunton and Harry Love, who's work provided a starting point for this library.
 http://scoop.cheerfactory.co.uk/2008/02/26/google-sitemap-generator/
 
+Thanks to Mislav Marohnić for contributing patches.
+
 == COPYRIGHT
 
 Copyright (c) 2009 Stateless Systems (http://statelesssystems.com). See LICENSE for details.
