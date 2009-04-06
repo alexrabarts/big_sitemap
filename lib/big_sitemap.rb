@@ -1,4 +1,3 @@
-require 'net/http'
 require 'uri'
 require 'zlib'
 require 'builder'
@@ -132,8 +131,38 @@ class BigSitemap
     end
 
     generate_sitemap_index
-    ping_search_engines
+
     return self
+  end
+
+  def ping_search_engines
+    require 'net/http'
+    require 'cgi'
+
+    sitemap_uri = CGI::escape(url_for_sitemap(@sitemap_files.last))
+
+    if @options[:ping_google]
+      Net::HTTP.get('www.google.com', "/webmasters/tools/ping?sitemap=#{sitemap_uri}")
+    end
+
+    if @options[:ping_yahoo]
+      if @options[:yahoo_app_id]
+        Net::HTTP.get(
+          'search.yahooapis.com', "/SiteExplorerService/V1/updateNotification?" +
+            "appid=#{@options[:yahoo_app_id]}&url=#{sitemap_uri}"
+        )
+      else
+        $stderr.puts 'unable to ping Yahoo: no ":yahoo_app_id" provided'
+      end
+    end
+
+    if @options[:ping_msn]
+      Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
+    end
+
+    if @options[:pink_ask]
+      Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
+    end
   end
 
   private
@@ -189,36 +218,5 @@ class BigSitemap
     f = xml_open(sitemap_index_filename)
     f.write(xml)
     f.close
-  end
-
-  def sitemap_uri
-    URI.escape("#{@base_url}/#{@web_path}/#{sitemap_index_filename}")
-  end
-
-  # Notify Google of the new sitemap index file
-  def ping_google
-    Net::HTTP.get('www.google.com', "/webmasters/tools/ping?sitemap=#{sitemap_uri}")
-  end
-
-  # Notify Yahoo! of the new sitemap index file
-  def ping_yahoo
-    Net::HTTP.get('search.yahooapis.com', "/SiteExplorerService/V1/updateNotification?appid=#{@yahoo_app_id}&url=#{sitemap_uri}")
-  end
-
-  # Notify MSN of the new sitemap index file
-  def ping_msn
-    Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
-  end
-
-  # Notify Ask of the new sitemap index file
-  def ping_ask
-    Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
-  end
-
-  def ping_search_engines
-    ping_google if @ping_google
-    ping_yahoo if @ping_yahoo && @yahoo_app_id
-    ping_msn if @ping_msn
-    ping_ask if @ping_ask
   end
 end

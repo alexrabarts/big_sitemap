@@ -54,6 +54,13 @@ Via gem:
   * <code>:ping_msn</code> -- <code>false</code>
   * <code>:pink_ask</code> -- <code>false</code>
 
+=== Pinging Search Engines
+
+To ping search engines, call <code>ping_search_engines</code> after you generate the sitemap:
+
+  sitemap.generate
+  sitemap.ping_search_engines
+
 === Find Methods
 
 Your models must provide either a <code>find_for_sitemap</code> or <code>all</code> class method that returns the instances that are to be included in the sitemap.
@@ -80,4 +87,3 @@ Thanks to Mislav Marohnić for contributing patches.
 == Copyright
 
 Copyright (c) 2009 Stateless Systems (http://statelesssystems.com). See LICENSE for details.
-
