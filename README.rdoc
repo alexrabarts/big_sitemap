@@ -7,25 +7,25 @@ BigSitemap is best run periodically through a Rake/Thor task.
   sitemap = BigSitemap.new(:base_url => 'http://example.com')
 
   # Add a model
-  sitemap.add(:model => Post, :path => 'articles')
+  sitemap.add Product
 
-  # Add another model with a change frequency and priority
-  sitemap.add(
-    :model            => Product,
-    :path             => 'products',
+  # Add another model with some options
+  sitemap.add(Post, {
+    :path             => 'articles',
     :change_frequency => 'daily',
     :priority         => 0.5
-  )
+  })
 
   # Generate the files
   sitemap.generate
 
-The code above will create a minimum of two files:
+The code above will create a minimum of three files:
 
 1. public/sitemaps/sitemap_index.xml.gz
-2. public/sitemaps/sitemap_post.xml.gz
+2. public/sitemaps/sitemap_product.xml.gz
+3. public/sitemaps/sitemap_post.xml.gz
 
-If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_post_1.xml.gz</code>, <code>sitemap_post_2.xml.gz</code>, &#133;).
+If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_product_1.xml.gz</code>, <code>sitemap_product_2.xml.gz</code>, &#133;).
 
 The URLs for each database record are generated in the form:
 
@@ -53,6 +53,12 @@ Via gem:
   * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
   * <code>:ping_msn</code> -- <code>false</code>
   * <code>:pink_ask</code> -- <code>false</code>
+
+=== Chaining
+
+You can chain methods together.  You could even get away with as little code as:
+
+  BigSitemap.new(:base_url => 'http://example.com').add(Post).generate
 
 === Pinging Search Engines
 

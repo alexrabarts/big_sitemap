@@ -139,7 +139,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'strip leading slashes from controller paths' do
       create_sitemap
-      @sitemap.add(:model => TestModel, :path => '/test_controller').generate
+      @sitemap.add(TestModel, :path => '/test_controller').generate
       assert(
         !elements(single_sitemaps_model_file, 'loc').first.text.match(/\/\/test_controller\//),
         'URL does not contain a double-slash before the controller path'
@@ -155,7 +155,7 @@ class BigSitemapTest < Test::Unit::TestCase
   context 'add method' do
     should 'be chainable' do
       create_sitemap
-      assert_equal BigSitemap, @sitemap.add(:model => TestModel, :path => 'test_controller').class
+      assert_equal BigSitemap, @sitemap.add(TestModel).class
     end
   end
 
@@ -218,7 +218,7 @@ class BigSitemapTest < Test::Unit::TestCase
     def add_model(options={})
       num_items = options.delete(:num_items) || default_num_items
       TestModel.stubs(:num_items).returns(num_items)
-      @sitemap.add({:model => TestModel, :path => 'test_controller'}.update(options))
+      @sitemap.add(TestModel, options)
     end
 
     def default_num_items

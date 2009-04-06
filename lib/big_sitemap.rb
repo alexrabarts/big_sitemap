@@ -48,15 +48,13 @@ class BigSitemap
     @file_path = "#{@options[:document_root]}/#{strip_leading_slash(@options[:path])}"
     Dir.mkdir(@file_path) unless File.exists? @file_path
 
-    @sources = []
+    @sources       = []
+    @sitemap_files = []
   end
 
-  def add(options)
-    unless options[:model] and options[:path]
-      raise ArgumentError, 'please provide ":model" and ":path"'
-    end
-
-    @sources << options.dup
+  def add(model, options={})
+    options[:path] ||= Extlib::Inflection.tableize(model.to_s)
+    @sources << [model, options.dup]
     return self
   end
 
@@ -68,15 +66,13 @@ class BigSitemap
   end
 
   def generate
-    @sources.each do |source|
-      klass = source[:model]
+    for model, options in @sources
+      count_method = pick_method(model, COUNT_METHODS)
+      find_method  = pick_method(model, FIND_METHODS)
+      raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
+      raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-      count_method = pick_method(klass, COUNT_METHODS)
-      find_method  = pick_method(klass, FIND_METHODS)
-      raise ArgumentError, "#{klass} must provide a count_for_sitemap class method" if count_method.nil?
-      raise ArgumentError, "#{klass} must provide a find_for_sitemap class method" if find_method.nil?
-
-      count        = klass.send(count_method)
+      count        = model.send(count_method)
       num_sitemaps = 1
       num_batches  = 1
 
@@ -86,16 +82,13 @@ class BigSitemap
       end
       batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
-      # Update the @sources hash so that the index file knows how many sitemaps to link to
-      source[:num_sitemaps] = num_sitemaps
-
       for sitemap_num in 1..num_sitemaps
         # Work out the start and end batch numbers for this sitemap
         batch_num_start = sitemap_num == 1 ? 1 : ((sitemap_num * batches_per_sitemap).ceil - batches_per_sitemap + 1).to_i
         batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
 
         # Stream XML output to a file
-        filename = "sitemap_#{Extlib::Inflection::underscore(klass.to_s)}"
+        filename = "sitemap_#{Extlib::Inflection::underscore(model.to_s)}"
         filename << "_#{sitemap_num}" if num_sitemaps > 1
 
         f = xml_open(filename)
@@ -108,17 +101,17 @@ class BigSitemap
             limit        = (count - offset) < @options[:batch_size] ? (count - offset - 1) : @options[:batch_size]
             find_options = num_batches > 1 ? {:limit => limit, :offset => offset} : {}
 
-            klass.send(find_method, find_options).each do |r|
+            model.send(find_method, find_options).each do |r|
               last_mod_method = pick_method(r, TIMESTAMP_METHODS)
               last_mod = last_mod_method.nil? ? Time.now : r.send(last_mod_method)
 
               param_method = pick_method(r, PARAM_METHODS)
 
               xml.url do
-                xml.loc("#{@base_url}/#{strip_leading_slash(source[:path])}/#{r.send(param_method)}")
+                xml.loc("#{@base_url}/#{strip_leading_slash(options[:path])}/#{r.send(param_method)}")
                 xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
-                xml.changefreq(source[:change_frequency] || 'weekly')
-                xml.priority(source[:priority]) unless source[:priority].nil?
+                xml.changefreq(options[:change_frequency] || 'weekly')
+                xml.priority(options[:priority]) unless options[:priority].nil?
               end
             end
           end
@@ -170,10 +163,10 @@ class BigSitemap
     str.sub(/^\//, '')
   end
 
-  def pick_method(klass, candidates)
+  def pick_method(model, candidates)
     method = nil
     candidates.each do |candidate|
-      if klass.respond_to? candidate
+      if model.respond_to? candidate
         method = candidate
         break
       end
@@ -184,8 +177,23 @@ class BigSitemap
   def xml_open(filename)
     filename << '.xml'
     filename << '.gz' if @options[:gzip]
+
     file = File.open("#{@file_path}/#{filename}", 'w+')
-    @options[:gzip] ? Zlib::GzipWriter.new(file) : file
+
+    @sitemap_files << file.path
+
+    writer = @options[:gzip] ? Zlib::GzipWriter.new(file) : file
+
+    if block_given?
+      yield writer
+      writer.close
+    end
+
+    writer
+  end
+
+  def url_for_sitemap(path)
+    "#{@base_url}/#{File.basename(path)}"
   end
 
   def sitemap_index_filename
@@ -194,28 +202,17 @@ class BigSitemap
 
   # Create a sitemap index document
   def generate_sitemap_index
-    xml     = ''
-    builder = Builder::XmlMarkup.new(:target => xml)
-    builder.instruct!
-    builder.sitemapindex(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
-      @sources.each do |source|
-        num_sitemaps = source[:num_sitemaps]
-        for i in 1..num_sitemaps
-          loc = "#{@base_url}/#{@web_path}/sitemap_#{Extlib::Inflection::underscore(source[:model].to_s)}"
-          loc << "_#{i}" if num_sitemaps > 1
-          loc << '.xml'
-          loc << '.gz' if @options[:gzip]
-
-          builder.sitemap do
-            builder.loc(loc)
-            builder.lastmod(Time.now.strftime('%Y-%m-%d'))
+    xml_open 'sitemap_index' do |file|
+      xml = Builder::XmlMarkup.new(:target => file)
+      xml.instruct!
+      xml.sitemapindex(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
+        for path in @sitemap_files[0..-2]
+          xml.sitemap do
+            xml.loc(url_for_sitemap(path))
+            xml.lastmod(Time.now.strftime('%Y-%m-%d'))
           end
         end
       end
     end
-
-    f = xml_open(sitemap_index_filename)
-    f.write(xml)
-    f.close
   end
 end
