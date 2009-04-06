@@ -44,17 +44,17 @@ Via gem:
 
 === Options
 
-  * <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
-  * <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. "https://example.com:8080/"
-  * <code>:document_root</code> -- string defaults to <code>Rails.root</code> or <code>Merb.root</code> if available
-  * <code>:path</code> -- string defaults to 'sitemaps', which places sitemap files under the <code>/sitemaps</code> directory
-  * <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
-  * <code>:batch_size</code> -- <code>1001</code> (not <code>1000</code> due to a bug in DataMapper)
-  * <code>:gzip</code> -- <code>true</code>
-  * <code>:ping_google</code> -- <code>true</code>
-  * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
-  * <code>:ping_msn</code> -- <code>false</code>
-  * <code>:pink_ask</code> -- <code>false</code>
+* <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
+* <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. "https://example.com:8080/"
+* <code>:document_root</code> -- string defaults to <code>Rails.root</code> or <code>Merb.root</code> if available
+* <code>:path</code> -- string defaults to 'sitemaps', which places sitemap files under the <code>/sitemaps</code> directory
+* <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
+* <code>:batch_size</code> -- <code>1001</code> (not <code>1000</code> due to a bug in DataMapper)
+* <code>:gzip</code> -- <code>true</code>
+* <code>:ping_google</code> -- <code>true</code>
+* <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
+* <code>:ping_msn</code> -- <code>false</code>
+* <code>:pink_ask</code> -- <code>false</code>
 
 === Chaining
 
