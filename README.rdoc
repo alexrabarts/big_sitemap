@@ -26,7 +26,7 @@ The code above will create a minimum of three files:
 2. public/sitemaps/sitemap_products.xml.gz
 3. public/sitemaps/sitemap_posts.xml.gz
 
-If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_products_1.xml.gz</code>, <code>sitemap_products_2.xml.gz</code>, &#133;).
+If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_products_1.xml.gz</code>, <code>sitemap_products_2.xml.gz</code>, ...).
 
 If you're using Rails then the URLs for each database record are generated with the <code>polymorphic_url</code> helper.  That means that the URL for a record will be exactly what you would expect: generated with respect to the routing setup of your app.  In other contexts where this helper isn't available, the URLs are generated in the form:
 
