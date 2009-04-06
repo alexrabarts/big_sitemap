@@ -88,7 +88,7 @@ class BigSitemap
         batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
 
         # Stream XML output to a file
-        filename = "sitemap_#{Extlib::Inflection::underscore(model.to_s)}"
+        filename = "sitemap_#{Extlib::Inflection::tableize(model.to_s)}"
         filename << "_#{sitemap_num}" if num_sitemaps > 1
 
         f = xml_open(filename)

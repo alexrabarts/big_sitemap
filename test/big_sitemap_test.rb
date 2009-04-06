@@ -238,15 +238,15 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     def unzipped_single_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_model.xml"
+      "#{sitemaps_dir}/sitemap_test_models.xml"
     end
 
     def first_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_model_1.xml.gz"
+      "#{sitemaps_dir}/sitemap_test_models_1.xml.gz"
     end
 
     def second_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_model_2.xml.gz"
+      "#{sitemaps_dir}/sitemap_test_models_2.xml.gz"
     end
 
     def sitemaps_dir
