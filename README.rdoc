@@ -56,6 +56,10 @@ By default, the sitemap files are created under <code>/sitemaps</code>.  You can
 
 Calling the <code>clean</code> method will remove all files from the Sitemaps directory.
 
+=== GZipping
+
+GZipping is enabled by default.  Disable it with the <code>:gzip</code> option.
+
 === Maximum Number of URLs
 
 Sitemaps will be split across several files if more than 50,000 records are returned.  You can customize this limit with the <code>:max_per_sitemap</code> option:

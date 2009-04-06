@@ -9,6 +9,7 @@ class BigSitemap
     :max_per_sitemap => 50000,
     :batch_size      => 1001,
     :path            => 'sitemaps',
+    :gzip            => true,
 
     # opinionated
     :ping_google => true,
@@ -93,9 +94,9 @@ class BigSitemap
         filename = "sitemap_#{Extlib::Inflection::underscore(klass.to_s)}"
         filename << "_#{sitemap_num}" if num_sitemaps > 1
 
-        gz = gz_writer("#{filename}.xml.gz")
+        f = xml_open(filename)
 
-        xml = Builder::XmlMarkup.new(:target => gz)
+        xml = Builder::XmlMarkup.new(:target => f)
         xml.instruct!
         xml.urlset(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
           for batch_num in batch_num_start..batch_num_end
@@ -122,7 +123,7 @@ class BigSitemap
           end
         end
 
-        gz.close
+        f.close
       end
 
     end
@@ -148,12 +149,15 @@ class BigSitemap
       method
     end
 
-    def gz_writer(filename)
-      Zlib::GzipWriter.new(File.open("#{@file_path}/#{filename}", 'w+'))
+    def xml_open(filename)
+      filename << '.xml'
+      filename << '.gz' if @options[:gzip]
+      file = File.open("#{@file_path}/#{filename}", 'w+')
+      @options[:gzip] ? Zlib::GzipWriter.new(file) : file
     end
 
     def sitemap_index_filename
-      'sitemap_index.xml.gz'
+      'sitemap_index'
     end
 
     # Create a sitemap index document
@@ -167,7 +171,8 @@ class BigSitemap
           for i in 1..num_sitemaps
             loc = "#{@base_url}/#{@web_path}/sitemap_#{Extlib::Inflection::underscore(source[:model].to_s)}"
             loc << "_#{i}" if num_sitemaps > 1
-            loc << '.xml.gz'
+            loc << '.xml'
+            loc << '.gz' if @options[:gzip]
 
             builder.sitemap do
               builder.loc(loc)
@@ -177,9 +182,9 @@ class BigSitemap
         end
       end
 
-      gz = gz_writer(sitemap_index_filename)
-      gz.write(xml)
-      gz.close
+      f = xml_open(sitemap_index_filename)
+      f.write(xml)
+      f.close
     end
 
     def sitemap_uri

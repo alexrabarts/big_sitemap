@@ -65,6 +65,11 @@ class BigSitemapTest < Test::Unit::TestCase
       generate_two_model_sitemap_files
       assert_equal 2, num_elements(sitemaps_index_file, 'lastmod')
     end
+
+    should 'not be gzipped' do
+      generate_sitemap_files(:gzip => false)
+      assert File.exists? unzipped_sitemaps_index_file
+    end
   end
 
   context 'Sitemap model file' do
@@ -114,6 +119,11 @@ class BigSitemapTest < Test::Unit::TestCase
         'URL does not contain a double-slash before the controller path'
       )
     end
+
+    should 'not be gzipped' do
+      generate_one_sitemap_model_file(:gzip => false)
+      assert File.exists? unzipped_single_sitemaps_model_file
+    end
   end
 
   context 'add method' do
@@ -157,14 +167,14 @@ class BigSitemapTest < Test::Unit::TestCase
       }.update(options))
     end
 
-    def generate_sitemap_files
-      create_sitemap
+    def generate_sitemap_files(options={})
+      create_sitemap(options)
       add_model
       @sitemap.generate
     end
 
-    def generate_one_sitemap_model_file
-      create_sitemap(:max_per_sitemap => default_num_items, :batch_size => default_num_items)
+    def generate_one_sitemap_model_file(options={})
+      create_sitemap(options.merge(:max_per_sitemap => default_num_items, :batch_size => default_num_items))
       add_model
       @sitemap.generate
     end
@@ -186,11 +196,19 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     def sitemaps_index_file
-      "#{sitemaps_dir}/sitemap_index.xml.gz"
+      "#{unzipped_sitemaps_index_file}.gz"
+    end
+
+    def unzipped_sitemaps_index_file
+      "#{sitemaps_dir}/sitemap_index.xml"
     end
 
     def single_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_model.xml.gz"
+      "#{unzipped_single_sitemaps_model_file}.gz"
+    end
+
+    def unzipped_single_sitemaps_model_file
+      "#{sitemaps_dir}/sitemap_test_model.xml"
     end
 
     def first_sitemaps_model_file
