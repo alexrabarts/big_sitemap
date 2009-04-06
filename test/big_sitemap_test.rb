@@ -93,6 +93,26 @@ class BigSitemapTest < Test::Unit::TestCase
       assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'changefreq')
     end
 
+    should 'contain several priority elements' do
+      generate_one_sitemap_model_file(:priority => 0.2)
+      assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'priority')
+    end
+
+    should 'have a change frequency of weekly by default' do
+      generate_one_sitemap_model_file
+      assert_equal 'weekly', elements(single_sitemaps_model_file, 'changefreq').first.text
+    end
+
+    should 'have a change frequency of daily' do
+      generate_one_sitemap_model_file(:change_frequency => 'daily')
+      assert_equal 'daily', elements(single_sitemaps_model_file, 'changefreq').first.text
+    end
+
+    should 'have a priority of 0.2' do
+      generate_one_sitemap_model_file(:priority => 0.2)
+      assert_equal '0.2', elements(single_sitemaps_model_file, 'priority').first.text
+    end
+
     should 'contain one loc element' do
       generate_two_model_sitemap_files
       assert_equal 1, num_elements(first_sitemaps_model_file, 'loc')
@@ -109,6 +129,12 @@ class BigSitemapTest < Test::Unit::TestCase
       generate_two_model_sitemap_files
       assert_equal 1, num_elements(first_sitemaps_model_file, 'changefreq')
       assert_equal 1, num_elements(second_sitemaps_model_file, 'changefreq')
+    end
+
+    should 'contain one priority element' do
+      generate_two_model_sitemap_files(:priority => 0.2)
+      assert_equal 1, num_elements(first_sitemaps_model_file, 'priority')
+      assert_equal 1, num_elements(second_sitemaps_model_file, 'priority')
     end
 
     should 'strip leading slashes from controller paths' do
@@ -174,14 +200,18 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     def generate_one_sitemap_model_file(options={})
+      change_frequency = options.delete(:change_frequency)
+      priority         = options.delete(:priority)
       create_sitemap(options.merge(:max_per_sitemap => default_num_items, :batch_size => default_num_items))
-      add_model
+      add_model(:change_frequency => change_frequency, :priority => priority)
       @sitemap.generate
     end
 
-    def generate_two_model_sitemap_files
-      create_sitemap(:max_per_sitemap => 1, :batch_size => 1)
-      add_model(:num_items => 2)
+    def generate_two_model_sitemap_files(options={})
+      change_frequency = options.delete(:change_frequency)
+      priority         = options.delete(:priority)
+      create_sitemap(options.merge(:max_per_sitemap => 1, :batch_size => 1))
+      add_model(:num_items => 2, :change_frequency => change_frequency, :priority => priority)
       @sitemap.generate
     end
 

@@ -7,7 +7,15 @@ BigSitemap is best run periodically through a Rake/Thor task.
   sitemap = BigSitemap.new(:base_url => 'http://example.com')
 
   # Add a model
-  sitemap.add(:model => Posts, :path => 'articles')
+  sitemap.add(:model => Post, :path => 'articles')
+
+  # Add another model with a change frequency and priority
+  sitemap.add(
+    :model            => Product,
+    :path             => 'products',
+    :change_frequency => 'daily',
+    :priority         => 0.5
+  )
 
   # Generate the files
   sitemap.generate
@@ -61,11 +69,6 @@ Calling the <code>clean</code> method will remove all files from the Sitemaps di
 == Limitations
 
 If your database is likely to shrink during the time it takes to create the sitemap then you might run into problems (the final, batched SQL select will overrun by setting a limit that is too large since it is calculated from the count, which is queried at the very beginning).  Patches welcome!
-
-== TODO
-
-* Support for <code>priority</code>
-* Support for <code>changefreq</code> (currently hard-coded to <code>weekly</code>)
 
 == Credits
 

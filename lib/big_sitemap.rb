@@ -119,7 +119,8 @@ class BigSitemap
               xml.url do
                 xml.loc("#{@base_url}/#{strip_leading_slash(source[:path])}/#{r.send(param_method)}")
                 xml.lastmod(last_mod.strftime('%Y-%m-%d')) unless last_mod.nil?
-                xml.changefreq('weekly')
+                xml.changefreq(source[:change_frequency] || 'weekly')
+                xml.priority(source[:priority]) unless source[:priority].nil?
               end
             end
           end
