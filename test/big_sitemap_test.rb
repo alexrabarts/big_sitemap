@@ -68,7 +68,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'not be gzipped' do
       generate_sitemap_files(:gzip => false)
-      assert File.exists? unzipped_sitemaps_index_file
+      assert File.exists?(unzipped_sitemaps_index_file)
     end
   end
 
@@ -122,7 +122,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'not be gzipped' do
       generate_one_sitemap_model_file(:gzip => false)
-      assert File.exists? unzipped_single_sitemaps_model_file
+      assert File.exists?(unzipped_single_sitemaps_model_file)
     end
   end
 

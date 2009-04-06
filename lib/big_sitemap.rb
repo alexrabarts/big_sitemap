@@ -18,6 +18,11 @@ class BigSitemap
     :ping_ask    => false
   }
 
+  COUNT_METHODS     = [:count_for_sitemap, :count]
+  FIND_METHODS      = [:find_for_sitemap, :all]
+  TIMESTAMP_METHODS = [:updated_at, :updated_on, :updated, :created_at, :created_on, :created]
+  PARAM_METHODS     = [:to_param, :id]
+
   def initialize(options)
     @options = DEFAULTS.merge options
 
@@ -67,8 +72,8 @@ class BigSitemap
     @sources.each do |source|
       klass = source[:model]
 
-      count_method = pick_method(klass, [:count_for_sitemap, :count])
-      find_method  = pick_method(klass, [:find_for_sitemap, :all])
+      count_method = pick_method(klass, COUNT_METHODS)
+      find_method  = pick_method(klass, FIND_METHODS)
       raise ArgumentError, "#{klass} must provide a count_for_sitemap class method" if count_method.nil?
       raise ArgumentError, "#{klass} must provide a find_for_sitemap class method" if find_method.nil?
 
@@ -105,13 +110,10 @@ class BigSitemap
             find_options = num_batches > 1 ? {:limit => limit, :offset => offset} : {}
 
             klass.send(find_method, find_options).each do |r|
-              last_mod_method = pick_method(
-                r,
-                [:updated_at, :updated_on, :updated, :created_at, :created_on, :created]
-              )
+              last_mod_method = pick_method(r, TIMESTAMP_METHODS)
               last_mod = last_mod_method.nil? ? Time.now : r.send(last_mod_method)
 
-              param_method = pick_method(r, [:to_param, :id])
+              param_method = pick_method(r, PARAM_METHODS)
               raise ArgumentError, "#{klass} must provide a to_param instance method" if param_method.nil?
 
               xml.url do
@@ -130,91 +132,92 @@ class BigSitemap
 
     generate_sitemap_index
     ping_search_engines
-    self # Chainable
+    return self
   end
 
   private
-    def strip_leading_slash(str)
-      str.sub(/^\//, '')
-    end
 
-    def pick_method(klass, candidates)
-      method = nil
-      candidates.each do |candidate|
-        if klass.respond_to? candidate
-          method = candidate
-          break
-        end
+  def strip_leading_slash(str)
+    str.sub(/^\//, '')
+  end
+
+  def pick_method(klass, candidates)
+    method = nil
+    candidates.each do |candidate|
+      if klass.respond_to? candidate
+        method = candidate
+        break
       end
-      method
     end
+    method
+  end
 
-    def xml_open(filename)
-      filename << '.xml'
-      filename << '.gz' if @options[:gzip]
-      file = File.open("#{@file_path}/#{filename}", 'w+')
-      @options[:gzip] ? Zlib::GzipWriter.new(file) : file
-    end
+  def xml_open(filename)
+    filename << '.xml'
+    filename << '.gz' if @options[:gzip]
+    file = File.open("#{@file_path}/#{filename}", 'w+')
+    @options[:gzip] ? Zlib::GzipWriter.new(file) : file
+  end
 
-    def sitemap_index_filename
-      'sitemap_index'
-    end
+  def sitemap_index_filename
+    'sitemap_index'
+  end
 
-    # Create a sitemap index document
-    def generate_sitemap_index
-      xml     = ''
-      builder = Builder::XmlMarkup.new(:target => xml)
-      builder.instruct!
-      builder.sitemapindex(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
-        @sources.each do |source|
-          num_sitemaps = source[:num_sitemaps]
-          for i in 1..num_sitemaps
-            loc = "#{@base_url}/#{@web_path}/sitemap_#{Extlib::Inflection::underscore(source[:model].to_s)}"
-            loc << "_#{i}" if num_sitemaps > 1
-            loc << '.xml'
-            loc << '.gz' if @options[:gzip]
+  # Create a sitemap index document
+  def generate_sitemap_index
+    xml     = ''
+    builder = Builder::XmlMarkup.new(:target => xml)
+    builder.instruct!
+    builder.sitemapindex(:xmlns => 'http://www.sitemaps.org/schemas/sitemap/0.9') do
+      @sources.each do |source|
+        num_sitemaps = source[:num_sitemaps]
+        for i in 1..num_sitemaps
+          loc = "#{@base_url}/#{@web_path}/sitemap_#{Extlib::Inflection::underscore(source[:model].to_s)}"
+          loc << "_#{i}" if num_sitemaps > 1
+          loc << '.xml'
+          loc << '.gz' if @options[:gzip]
 
-            builder.sitemap do
-              builder.loc(loc)
-              builder.lastmod(Time.now.strftime('%Y-%m-%d'))
-            end
+          builder.sitemap do
+            builder.loc(loc)
+            builder.lastmod(Time.now.strftime('%Y-%m-%d'))
           end
         end
       end
-
-      f = xml_open(sitemap_index_filename)
-      f.write(xml)
-      f.close
     end
 
-    def sitemap_uri
-      URI.escape("#{@base_url}/#{@web_path}/#{sitemap_index_filename}")
-    end
+    f = xml_open(sitemap_index_filename)
+    f.write(xml)
+    f.close
+  end
 
-    # Notify Google of the new sitemap index file
-    def ping_google
-      Net::HTTP.get('www.google.com', "/webmasters/tools/ping?sitemap=#{sitemap_uri}")
-    end
+  def sitemap_uri
+    URI.escape("#{@base_url}/#{@web_path}/#{sitemap_index_filename}")
+  end
 
-    # Notify Yahoo! of the new sitemap index file
-    def ping_yahoo
-      Net::HTTP.get('search.yahooapis.com', "/SiteExplorerService/V1/updateNotification?appid=#{@yahoo_app_id}&url=#{sitemap_uri}")
-    end
+  # Notify Google of the new sitemap index file
+  def ping_google
+    Net::HTTP.get('www.google.com', "/webmasters/tools/ping?sitemap=#{sitemap_uri}")
+  end
 
-    # Notify MSN of the new sitemap index file
-    def ping_msn
-      Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
-    end
+  # Notify Yahoo! of the new sitemap index file
+  def ping_yahoo
+    Net::HTTP.get('search.yahooapis.com', "/SiteExplorerService/V1/updateNotification?appid=#{@yahoo_app_id}&url=#{sitemap_uri}")
+  end
 
-    # Notify Ask of the new sitemap index file
-    def ping_ask
-      Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
-    end
+  # Notify MSN of the new sitemap index file
+  def ping_msn
+    Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
+  end
 
-    def ping_search_engines
-      ping_google if @ping_google
-      ping_yahoo if @ping_yahoo && @yahoo_app_id
-      ping_msn if @ping_msn
-      ping_ask if @ping_ask
-    end
+  # Notify Ask of the new sitemap index file
+  def ping_ask
+    Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
+  end
+
+  def ping_search_engines
+    ping_google if @ping_google
+    ping_yahoo if @ping_yahoo && @yahoo_app_id
+    ping_msn if @ping_msn
+    ping_ask if @ping_ask
+  end
 end
