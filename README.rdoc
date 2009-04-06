@@ -23,9 +23,9 @@ BigSitemap is best run periodically through a Rake/Thor task.
 The code above will create a minimum of two files:
 
 1. public/sitemaps/sitemap_index.xml.gz
-2. public/sitemaps/sitemap_posts.xml.gz
+2. public/sitemaps/sitemap_post.xml.gz
 
-If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_posts_1.xml.gz</code>, <code>sitemap_posts_2.xml.gz</code>, &#133;).
+If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_post_1.xml.gz</code>, <code>sitemap_post_2.xml.gz</code>, &#133;).
 
 The URLs for each database record are generated in the form:
 
