@@ -27,8 +27,8 @@ class BigSitemapTest < Test::Unit::TestCase
     assert File.exists?(single_sitemaps_model_file), "#{single_sitemaps_model_file} exists"
   end
 
-  should 'generate exactly two sitemap model files' do
-    generate_exactly_two_model_sitemap_files
+  should 'generate two sitemap model files' do
+    generate_two_model_sitemap_files
     assert File.exists?(first_sitemaps_model_file), "#{first_sitemaps_model_file} exists"
     assert File.exists?(second_sitemaps_model_file), "#{second_sitemaps_model_file} exists"
     third_sitemaps_model_file = "#{sitemaps_dir}/sitemap_test_model_3.xml.gz"
@@ -47,61 +47,61 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     should 'contain one loc element' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal 1, num_elements(sitemaps_index_file, 'loc')
     end
 
     should 'contain one lastmod element' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal 1, num_elements(sitemaps_index_file, 'lastmod')
     end
 
     should 'contain two loc elements' do
-      generate_exactly_two_model_sitemap_files
+      generate_two_model_sitemap_files
       assert_equal 2, num_elements(sitemaps_index_file, 'loc')
     end
 
     should 'contain two lastmod elements' do
-      generate_exactly_two_model_sitemap_files
+      generate_two_model_sitemap_files
       assert_equal 2, num_elements(sitemaps_index_file, 'lastmod')
     end
   end
 
   context 'Sitemap model file' do
     should 'contain one urlset element' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal 1, num_elements(single_sitemaps_model_file, 'urlset')
     end
 
     should 'contain several loc elements' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'loc')
     end
 
     should 'contain several lastmod elements' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'lastmod')
     end
 
     should 'contain several changefreq elements' do
-      generate_sitemap_files
+      generate_one_sitemap_model_file
       assert_equal default_num_items, num_elements(single_sitemaps_model_file, 'changefreq')
     end
 
     should 'contain one loc element' do
-      generate_exactly_two_model_sitemap_files
+      generate_two_model_sitemap_files
       assert_equal 1, num_elements(first_sitemaps_model_file, 'loc')
       assert_equal 1, num_elements(second_sitemaps_model_file, 'loc')
     end
 
     should 'contain one lastmod element' do
-      generate_exactly_two_model_sitemap_files
+      generate_two_model_sitemap_files
       assert_equal 1, num_elements(first_sitemaps_model_file, 'lastmod')
       assert_equal 1, num_elements(second_sitemaps_model_file, 'lastmod')
     end
 
     should 'contain one changefreq element' do
-      generate_exactly_two_model_sitemap_files
+      generate_two_model_sitemap_files
       assert_equal 1, num_elements(first_sitemaps_model_file, 'changefreq')
       assert_equal 1, num_elements(second_sitemaps_model_file, 'changefreq')
     end
@@ -163,7 +163,13 @@ class BigSitemapTest < Test::Unit::TestCase
       @sitemap.generate
     end
 
-    def generate_exactly_two_model_sitemap_files
+    def generate_one_sitemap_model_file
+      create_sitemap(:max_per_sitemap => default_num_items, :batch_size => default_num_items)
+      add_model
+      @sitemap.generate
+    end
+
+    def generate_two_model_sitemap_files
       create_sitemap(:max_per_sitemap => 1, :batch_size => 1)
       add_model(:num_items => 2)
       @sitemap.generate
