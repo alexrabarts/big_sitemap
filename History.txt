@@ -1,3 +1,7 @@
+=== 0.3.1 / 2009-04-18
+
+* Fixes broken gemspec
+
 === 0.3.0 / 2009-04-06
 
 * API change: Pass model through as first argument to add method, e.g.sitemap.add(Posts, {:path => 'articles'})
