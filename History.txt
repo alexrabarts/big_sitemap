@@ -1,5 +1,9 @@
 === 0.3.2 / 2009-06-09
 
+* Better handling of URLs when Rails' polymorphic_url isn't available in the model
+
+=== 0.3.2 / 2009-06-09
+
 * Fixes "uninitialized constant ActionController" error
 * Fixes "Unknown key(s): path" error
 
