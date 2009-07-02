@@ -56,7 +56,7 @@ Via gem:
 * <code>:ping_google</code> -- <code>true</code>
 * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
 * <code>:ping_msn</code> -- <code>false</code>
-* <code>:pink_ask</code> -- <code>false</code>
+* <code>:ping_ask</code> -- <code>false</code>
 
 === Chaining
 
