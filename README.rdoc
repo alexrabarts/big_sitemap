@@ -105,7 +105,10 @@ Tests for Rails components.
 Thanks to Alastair Brunton and Harry Love, who's work provided a starting point for this library.
 http://scoop.cheerfactory.co.uk/2008/02/26/google-sitemap-generator/
 
-Thanks to Mislav Marohnić for contributing patches.
+Thanks to those who can contributed patches:
+
+  * Mislav Marohnić
+  * Jeff Schoolcraft
 
 == Copyright
 
