@@ -1,3 +1,7 @@
+=== 0.3.4 / 2009-07-02
+
+* BigSitemap-specific options are no longer passed through to the ORM's find method
+
 === 0.3.2 / 2009-06-09
 
 * Better handling of URLs when Rails' polymorphic_url isn't available in the model
