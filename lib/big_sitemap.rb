@@ -99,7 +99,7 @@ class BigSitemap
         end
         batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
-        find_options = options.except(:path)
+        find_options = options.except(:path, :num_items, :priority, :change_frequency)
 
         for sitemap_num in 1..num_sitemaps
           # Work out the start and end batch numbers for this sitemap
@@ -163,7 +163,7 @@ class BigSitemap
       Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
     end
 
-    if @options[:pink_ask]
+    if @options[:ping_ask]
       Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
     end
   end
