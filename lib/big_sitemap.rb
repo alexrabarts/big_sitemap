@@ -175,6 +175,7 @@ class BigSitemap
       url << '://' unless url.match('://')
       url << @default_url_options[:host]
       url << ":#{port}" if port = @default_url_options[:port] and port != 80
+      url
     end
   end
 
@@ -215,7 +216,11 @@ class BigSitemap
   end
 
   def url_for_sitemap(path)
-    "#{root_url}/#{File.basename(path)}"
+    if @options[:path].blank?
+      "#{root_url}/#{File.basename(path)}"
+    else
+      "#{root_url}/#{@options[:path]}/#{File.basename(path)}"
+    end
   end
 
   # Create a sitemap index document
