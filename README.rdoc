@@ -109,6 +109,7 @@ Thanks to those who have contributed patches:
 
 * Mislav Marohnić
 * Jeff Schoolcraft
+* Dalibor Nasevic
 
 == Copyright
 
