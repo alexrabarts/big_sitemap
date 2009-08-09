@@ -55,7 +55,7 @@ Via gem:
 * <code>:gzip</code> -- <code>true</code>
 * <code>:ping_google</code> -- <code>true</code>
 * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
-* <code>:ping_msn</code> -- <code>false</code>
+* <code>:ping_bing</code> -- <code>false</code>
 * <code>:ping_ask</code> -- <code>false</code>
 
 === Chaining

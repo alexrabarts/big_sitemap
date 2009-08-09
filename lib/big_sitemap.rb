@@ -13,7 +13,7 @@ class BigSitemap
     # opinionated
     :ping_google => true,
     :ping_yahoo  => false, # needs :yahoo_app_id
-    :ping_msn    => false,
+    :ping_bing   => false,
     :ping_ask    => false
   }
 
@@ -159,8 +159,8 @@ class BigSitemap
       end
     end
 
-    if @options[:ping_msn]
-      Net::HTTP.get('webmaster.live.com', "/ping.aspx?siteMap=#{sitemap_uri}")
+    if @options[:ping_bing]
+      Net::HTTP.get('www.bing.com', "/webmaster/ping.aspx?siteMap=#{sitemap_uri}")
     end
 
     if @options[:ping_ask]
