@@ -1,3 +1,8 @@
+=== 0.4.0 / 2009-08-09
+
+* Use Bing instead of Live/MSN.  Note, this breaks backwards compatibility as
+  the old :ping_msn option is now :ping_bing.
+
 === 0.3.5 / 2009-08-05
 
 * Fixed bugs in root_url generation and url_for_sitemap generation
