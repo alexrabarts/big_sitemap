@@ -1,3 +1,7 @@
+=== 0.5.1 / 2009-09-07
+
+* Fixes an issue with the :last_modified key being passed into the find method options
+
 === 0.5.0 / 2009-09-07
 
 * Add support for lambdas when specifying lastmod
