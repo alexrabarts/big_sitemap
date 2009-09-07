@@ -130,6 +130,11 @@ class BigSitemapTest < Test::Unit::TestCase
       assert_equal TestModel.new.priority.to_s, elements(first_sitemaps_model_file, 'priority').first.text
     end
 
+    should 'be able to use a lambda to specify lastmod' do
+      generate_one_sitemap_model_file(:last_modified => lambda {|m| m.updated_at})
+      assert_equal TestModel.new.updated_at.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00'), elements(first_sitemaps_model_file, 'lastmod').first.text
+    end
+
     should 'contain two loc element' do
       generate_two_model_sitemap_files
       assert_equal 2, num_elements(first_sitemaps_model_file, 'loc')

@@ -11,6 +11,10 @@ class TestModel
     0.8
   end
 
+  def updated_at
+    Time.at(1000000000)
+  end
+
   class << self
     def count_for_sitemap
       self.find_for_sitemap.size

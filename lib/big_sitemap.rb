@@ -112,8 +112,13 @@ class BigSitemap
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
 
             model.send(find_method, find_options).each do |record|
-              last_mod_method = pick_method(record, TIMESTAMP_METHODS)
-              last_mod = last_mod_method.nil? ? Time.now : record.send(last_mod_method)
+              last_mod = options[:last_modified]
+              if last_mod.is_a?(Proc)
+                last_mod = last_mod.call(record)
+              elsif last_mod.nil?
+                last_mod_method = pick_method(record, TIMESTAMP_METHODS)
+                last_mod = last_mod_method.nil? ? Time.now : record.send(last_mod_method)
+              end
 
               param_method = pick_method(record, PARAM_METHODS)
 
