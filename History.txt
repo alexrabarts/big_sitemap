@@ -1,3 +1,7 @@
+=== 0.5.0 / 2009-09-07
+
+* Add support for lambdas when specifying lastmod
+
 === 0.4.0 / 2009-08-09
 
 * Use Bing instead of Live/MSN.  Note, this breaks backwards compatibility as
