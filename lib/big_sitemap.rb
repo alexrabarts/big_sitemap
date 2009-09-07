@@ -99,7 +99,7 @@ class BigSitemap
         end
         batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
 
-        find_options = options.except(:path, :num_items, :priority, :change_frequency)
+        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified)
 
         for sitemap_num in 1..num_sitemaps
           # Work out the start and end batch numbers for this sitemap
