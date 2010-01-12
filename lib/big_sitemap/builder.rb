@@ -80,7 +80,7 @@ class BigSitemap
       # define root element and namespaces
       attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
       attrs['xmlns:geo'] = "http://www.google.com/geo/schemas/sitemap/1.0" if geo?
-      _open_tag(@index ? 'sitemapindex' : 'urlset', attrs)
+      _open_tag(index? ? 'sitemapindex' : 'urlset', attrs)
     end
 
     def _rotate
