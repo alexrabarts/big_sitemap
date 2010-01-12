@@ -122,8 +122,7 @@ class BigSitemap
 
               param_method = pick_method(record, PARAM_METHODS)
 
-              location = defined?(Rails) ? polymorphic_url(record) : nil rescue nil
-              location ||= "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
+              location = "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
 
               change_frequency = options[:change_frequency] || 'weekly'
               freq = change_frequency.is_a?(Proc) ? change_frequency.call(record) : change_frequency
