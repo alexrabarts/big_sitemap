@@ -89,7 +89,9 @@ class BigSitemap
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
         raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-        count        = model.send(count_method)
+        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified)
+
+        count        = model.send(count_method, find_options)
         num_sitemaps = 1
         num_batches  = 1
 
@@ -98,8 +100,6 @@ class BigSitemap
           num_sitemaps = (count.to_f / @options[:max_per_sitemap].to_f).ceil
         end
         batches_per_sitemap = num_batches.to_f / num_sitemaps.to_f
-
-        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified)
 
         for sitemap_num in 1..num_sitemaps
           # Work out the start and end batch numbers for this sitemap
