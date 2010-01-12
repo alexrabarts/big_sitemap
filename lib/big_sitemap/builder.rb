@@ -9,6 +9,7 @@ class BigSitemap
       @gzip = options.delete(:gzip)
       @max_urls = options.delete(:max_urls) || MAX_URLS
       @type = options.delete(:type)
+      @geo  = options.delete(:geo)
       @paths = []
       @parts = 0
 
@@ -26,15 +27,20 @@ class BigSitemap
       @type == 'index'
     end
 
+    def geo?
+      !index? && @geo == true
+    end
+
     def add_url!(url, time = nil, frequency = nil, priority = nil)
       _rotate if @max_urls == @urls
 
       tag!(index? ? 'sitemap' : 'url') do
-        loc url
+        loc (geo? ? "#{url}.kml" : url)
         # W3C format is the subset of ISO 8601
         lastmod(time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00')) unless time.nil?
         changefreq(frequency) unless frequency.nil?
         priority(priority) unless priority.nil?
+        _build_geo if geo?
       end
       @urls += 1
     end
@@ -73,6 +79,7 @@ class BigSitemap
       instruct!
       # define root element and namespaces
       attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+      attrs['xmlns:geo'] = "http://www.google.com/geo/schemas/sitemap/1.0" if geo?
       _open_tag(@index ? 'sitemapindex' : 'urlset', attrs)
     end
 
@@ -125,5 +132,12 @@ class BigSitemap
         _close_tag(name)
       end
     end
+
+    def _build_geo
+      geo :geo do
+        geo :format, 'kml'
+      end
+    end
+
   end
 end
