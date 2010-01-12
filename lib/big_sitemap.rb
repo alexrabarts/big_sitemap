@@ -188,6 +188,8 @@ class BigSitemap
 
   def with_sitemap(name, options={})
     options[:filename] = "#{@file_path}/sitemap_#{name}"
+    options[:filename] += "_kml" if @options[:geo]
+    options[:geo]      = true    if @options[:geo]
     options[:max_urls] = @options[:max_per_sitemap]
 
     unless options[:gzip] = @options[:gzip]
