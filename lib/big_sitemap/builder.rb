@@ -3,13 +3,12 @@ require 'zlib'
 
 class BigSitemap
   class Builder < Builder::XmlMarkup
-    NAMESPACE = 'http://www.sitemaps.org/schemas/sitemap/0.9'
     MAX_URLS = 50000
 
     def initialize(options)
       @gzip = options.delete(:gzip)
       @max_urls = options.delete(:max_urls) || MAX_URLS
-      @index = options.delete(:index)
+      @type = options.delete(:type)
       @paths = []
       @parts = 0
 
@@ -23,10 +22,14 @@ class BigSitemap
       _init_document
     end
 
+    def index?
+      @type == 'index'
+    end
+
     def add_url!(url, time = nil, frequency = nil, priority = nil)
       _rotate if @max_urls == @urls
 
-      tag!(@index ? 'sitemap' : 'url') do
+      tag!(index? ? 'sitemap' : 'url') do
         loc url
         # W3C format is the subset of ISO 8601
         lastmod(time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00')) unless time.nil?
@@ -68,7 +71,9 @@ class BigSitemap
     def _init_document
       @urls = 0
       instruct!
-      _open_tag(@index ? 'sitemapindex' : 'urlset', :xmlns => NAMESPACE)
+      # define root element and namespaces
+      attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+      _open_tag(@index ? 'sitemapindex' : 'urlset', attrs)
     end
 
     def _rotate

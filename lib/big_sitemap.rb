@@ -187,7 +187,6 @@ class BigSitemap
   private
 
   def with_sitemap(name, options={})
-    options[:index] = name == 'index'
     options[:filename] = "#{@file_path}/sitemap_#{name}"
     options[:max_urls] = @options[:max_per_sitemap]
 
@@ -230,7 +229,7 @@ class BigSitemap
 
   # Create a sitemap index document
   def generate_sitemap_index
-    with_sitemap 'index' do |sitemap|
+    with_sitemap 'index', :type => 'index' do |sitemap|
       for path in @sitemap_files
         sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
       end
