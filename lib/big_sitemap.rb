@@ -101,7 +101,7 @@ class BigSitemap
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
         raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified)
+        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified, :location)
 
         count        = model.send(count_method, find_options)
         num_sitemaps = 1
@@ -134,7 +134,12 @@ class BigSitemap
 
               param_method = pick_method(record, PARAM_METHODS)
 
-              location = "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
+              location = options[:location]
+              if location.is_a?(Proc)
+                location = location.call(record)
+              else
+                location = "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
+              end
 
               change_frequency = options[:change_frequency] || 'weekly'
               freq = change_frequency.is_a?(Proc) ? change_frequency.call(record) : change_frequency
