@@ -1,7 +1,11 @@
 require 'uri'
 require 'big_sitemap/builder'
-require 'extlib'
-require 'action_controller' if defined? Rails
+
+if defined? Rails
+  require 'action_controller'
+else
+  require 'extlib'
+end
 
 class BigSitemap
   DEFAULTS = {
@@ -69,9 +73,17 @@ class BigSitemap
   end
 
   def add(model, options={})
-    options[:path] ||= Extlib::Inflection.tableize(model.to_s)
+    options[:path] ||= table_name(model)
     @sources << [model, options.dup]
     return self
+  end
+
+  def table_name(model)
+    if defined? Rails
+      model.table_name
+    else
+      Extlib::Inflection.tableize(model.to_s)
+    end
   end
 
   def clean
@@ -83,7 +95,7 @@ class BigSitemap
 
   def generate
     for model, options in @sources
-      with_sitemap(Extlib::Inflection::tableize(model.to_s)) do |sitemap|
+      with_sitemap(table_name(model)) do |sitemap|
         count_method = pick_method(model, COUNT_METHODS)
         find_method  = pick_method(model, FIND_METHODS)
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
