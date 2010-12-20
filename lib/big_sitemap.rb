@@ -1,4 +1,6 @@
 require 'uri'
+require 'fileutils'
+
 require 'big_sitemap/builder'
 
 if defined? Rails

@@ -161,6 +161,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'strip leading slashes from controller paths' do
       create_sitemap
+      add_model
       @sitemap.add(TestModel, :path => '/test_controller').generate
       assert(
         !elements(first_sitemaps_model_file, 'loc').first.text.match(/\/\/test_controller\//),
@@ -239,7 +240,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     def add_model(options={})
       num_items = options.delete(:num_items) || default_num_items
-      TestModel.stubs(:num_items).returns(num_items)
+      TestModel.stubs(:count_for_sitemap).returns(num_items)
       @sitemap.add(TestModel, options)
     end
 

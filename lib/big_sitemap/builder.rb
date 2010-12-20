@@ -1,3 +1,4 @@
+require 'fileutils'
 require 'builder'
 require 'zlib'
 
@@ -69,9 +70,9 @@ class BigSitemap
     end
 
     def _open_writer(filename)
-      file = File.open(filename, 'w+')
+      file = ::File.open(filename, 'w+')
       @paths << filename
-      @gzip ? Zlib::GzipWriter.new(file) : file
+      @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 
     def _init_document
