@@ -75,7 +75,8 @@ class BigSitemap
   end
 
   def add(model, options={})
-    options[:path] ||= table_name(model)
+    options[:path]     ||= table_name(model)
+    options[:filename] ||= file_name(model)
     @sources << [model, options.dup]
     return self
   end
@@ -94,6 +95,11 @@ class BigSitemap
     end
   end
 
+  def file_name(name)
+    name = table_name(name) unless name.is_a? String
+    "#{@file_path}/sitemap_#{name}#{'_kml' if @options[:geo]}"
+  end
+
   def clean
     Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"].each do |file|
       FileUtils.rm file
@@ -101,9 +107,19 @@ class BigSitemap
     return self
   end
 
+  def update
+    @sources.each do |model, options|
+      #next unless options[:partial_update]
+      if last_id = get_last_id(options[:filename])
+        @sources[model][:conditions] = [options[:conditions], "(id > #{last_id})"].compact.join(' AND ')
+      end
+    end
+    generate
+  end
+
   def generate
     for model, options in @sources
-      with_sitemap(table_name(model)) do |sitemap|
+      with_sitemap(model, options) do |sitemap|
         count_method = pick_method(model, COUNT_METHODS)
         find_method  = pick_method(model, FIND_METHODS)
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
@@ -155,7 +171,8 @@ class BigSitemap
               priority = options[:priority]
               pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
-              sitemap.add_url!(location, last_mod, freq, pri)
+              id = record.respond_to?(:id) ? record.id : nil
+              sitemap.add_url!(location, last_mod, freq, pri, id)
             end
           end
         end
@@ -222,14 +239,11 @@ class BigSitemap
   private
 
   def with_sitemap(name, options={})
-    options[:filename] = "#{@file_path}/sitemap_#{name}"
-    options[:filename] += "_kml" if @options[:geo]
-    options[:geo]      = true    if @options[:geo]
-    options[:max_urls] = @options[:max_per_sitemap]
-
-    unless options[:gzip] = @options[:gzip]
-      options[:indent] = 2
-    end
+    options[:filename] ||= file_name(name)
+    options[:geo]      ||= @options[:geo]
+    options[:max_urls] ||= @options[:max_per_sitemap]
+    options[:gzip]     ||= @options[:gzip]
+    options[:indent]     = options[:gzip] ? 0 : 2
 
     sitemap = Builder.new(options)
 
@@ -243,6 +257,11 @@ class BigSitemap
 
   def strip_leading_slash(str)
     str.sub(/^\//, '')
+  end
+
+  def get_last_id(filename)
+    last_file = Dir["#{filename}*.{xml,xml.gz}"].sort.last
+    last_file.to_s.scan(/#{filename}(.+).xml/).flatten.last
   end
 
   def pick_method(model, candidates)

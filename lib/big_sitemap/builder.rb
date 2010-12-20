@@ -32,7 +32,8 @@ class BigSitemap
       !index? && @geo == true
     end
 
-    def add_url!(url, time = nil, frequency = nil, priority = nil)
+    def add_url!(url, time = nil, frequency = nil, priority = nil, part_nr = nil)
+      @parts = part_nr if part_nr && @custom_part_nr
       _rotate if @max_urls == @urls
 
       tag!(index? ? 'sitemap' : 'url') do

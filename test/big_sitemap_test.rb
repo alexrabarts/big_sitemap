@@ -246,6 +246,17 @@ class BigSitemapTest < Test::Unit::TestCase
     end
   end
 
+  context 'partial update' do
+    should 'generate for all xml files in directory' do
+      create_sitemap
+      filename = "#{sitemaps_dir}/sitemap_file"
+      @sitemap.clean
+      File.open("#{filename}112312312.xml", 'w')
+      File.open("#{filename}223423423.xml.gz", 'w')
+      assert_equal "223423423", @sitemap.send(:get_last_id, filename)
+    end
+  end
+
   private
     def delete_tmp_files
       FileUtils.rm_rf(sitemaps_dir)
