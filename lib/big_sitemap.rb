@@ -257,11 +257,7 @@ class BigSitemap
   end
 
   def url_for_sitemap(path)
-    if @options[:path].blank?
-      "#{root_url}/#{File.basename(path)}"
-    else
-      "#{root_url}/#{@options[:path]}/#{File.basename(path)}"
-    end
+    [root_url, @options[:path], File.basename(path)].compact.join('/')
   end
 
   # Create a sitemap index document
