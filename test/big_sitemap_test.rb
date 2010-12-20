@@ -182,6 +182,17 @@ class BigSitemapTest < Test::Unit::TestCase
     end
   end
 
+  context 'add static method' do
+    should 'should generate static content' do
+      create_sitemap
+      @sitemap.add_static('/', Time.now, 'weekly', 0.5)
+      @sitemap.add_static('/about', Time.now, 'weekly', 0.5).generate_static
+      elems = elements(static_sitemaps_file, 'loc')
+      assert_equal "/", elems.first.text
+      assert_equal "/about", elems.last.text
+    end
+  end
+
   context 'clean method' do
     should 'be chainable' do
       create_sitemap
@@ -262,6 +273,10 @@ class BigSitemapTest < Test::Unit::TestCase
 
     def first_sitemaps_model_file
       "#{sitemaps_dir}/sitemap_test_models.xml.gz"
+    end
+
+    def static_sitemaps_file
+      "#{sitemaps_dir}/sitemap_static.xml.gz"
     end
 
     def second_sitemaps_model_file

@@ -80,6 +80,11 @@ class BigSitemap
     return self
   end
 
+  def add_static(url, time = nil, frequency = nil, priority = nil)
+    @static_pages ||= []
+    @static_pages << [url, time, frequency, priority]
+  end
+
   def table_name(model)
     if defined? Rails
       model.table_name
@@ -156,9 +161,20 @@ class BigSitemap
       end
     end
 
+    generate_static
+
     generate_sitemap_index
 
     return self
+  end
+
+  def generate_static
+    return if Array(@static_pages).empty?
+    with_sitemap('static') do |sitemap|
+      @static_pages.each do |location, last_mod, freq, pri|
+        sitemap.add_url!(location, last_mod, freq, pri)
+      end
+    end
   end
 
   def ping_search_engines
