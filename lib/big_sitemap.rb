@@ -269,6 +269,7 @@ class BigSitemap
     files ||= Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"]
     with_sitemap 'index', :type => 'index' do |sitemap|
       for path in files
+        next if path =~ /index/
         sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
       end
     end

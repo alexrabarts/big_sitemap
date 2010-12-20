@@ -3,11 +3,11 @@ require 'nokogiri'
 
 class BigSitemapTest < Test::Unit::TestCase
   def setup
-    delete_tmp_files
+   delete_tmp_files
   end
 
   def teardown
-    delete_tmp_files
+   delete_tmp_files
   end
 
   should 'raise an error if the :base_url option is not specified' do
@@ -211,6 +211,38 @@ class BigSitemapTest < Test::Unit::TestCase
     should 'be chainable' do
       create_sitemap
       assert_equal BigSitemap, @sitemap.generate.class
+    end
+  end
+
+  context 'sitemap index' do
+    should 'generate for all xml files in directory' do
+      create_sitemap
+      @sitemap.clean
+      File.open("#{sitemaps_dir}/sitemap_file1.xml", 'w')
+      File.open("#{sitemaps_dir}/sitemap_file2.xml.gz", 'w')
+      File.open("#{sitemaps_dir}/sitemap_file3.txt", 'w')
+      File.open("#{sitemaps_dir}/file4.xml", 'w')
+      File.open(unzipped_sitemaps_index_file, 'w')
+      @sitemap.send :generate_sitemap_index
+
+      elem = elements(sitemaps_index_file, 'loc')
+      assert_equal 2, elem.size #no index and file3 and file4 found
+      assert_equal "http://example.com/sitemaps/sitemap_file1.xml", elem.first.text
+      assert_equal "http://example.com/sitemaps/sitemap_file2.xml.gz", elem.last.text
+    end
+
+    should 'generate for all for given file' do
+      create_sitemap
+      @sitemap.clean
+      File.open("#{sitemaps_dir}/sitemap_file1.xml", 'w')
+      File.open("#{sitemaps_dir}/sitemap_file2.xml.gz", 'w')
+      files = ["#{sitemaps_dir}/sitemap_file1.xml", "#{sitemaps_dir}/sitemap_file2.xml.gz"]
+      @sitemap.send :generate_sitemap_index, files
+
+      elem = elements(sitemaps_index_file, 'loc')
+      assert_equal 2, elem.size
+      assert_equal "http://example.com/sitemaps/sitemap_file1.xml", elem.first.text
+      assert_equal "http://example.com/sitemaps/sitemap_file2.xml.gz", elem.last.text
     end
   end
 
