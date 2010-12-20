@@ -83,6 +83,7 @@ class BigSitemap
   def add_static(url, time = nil, frequency = nil, priority = nil)
     @static_pages ||= []
     @static_pages << [url, time, frequency, priority]
+    return self
   end
 
   def table_name(model)
@@ -163,7 +164,7 @@ class BigSitemap
 
     generate_static
 
-    generate_sitemap_index
+    generate_sitemap_index(@sitemap_files)
 
     return self
   end
@@ -264,9 +265,10 @@ class BigSitemap
   end
 
   # Create a sitemap index document
-  def generate_sitemap_index
+  def generate_sitemap_index( files = nil )
+    files ||= Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"]
     with_sitemap 'index', :type => 'index' do |sitemap|
-      for path in @sitemap_files
+      for path in files
         sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
       end
     end
