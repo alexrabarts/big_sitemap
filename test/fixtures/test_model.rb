@@ -3,6 +3,10 @@ class TestModel
     object_id
   end
 
+  def id
+    @id ||= TestModel.id_count += 1
+  end
+
   def change_frequency
     'monthly'
   end
@@ -29,6 +33,12 @@ class TestModel
       num_times = options.delete(:limit) || self.num_items
       num_times.times { instances.push(self.new) }
       instances
+    end
+
+    attr_writer :id_count
+
+    def id_count
+      @id_count ||= 0
     end
   end
 end

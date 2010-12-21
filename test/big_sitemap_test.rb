@@ -3,11 +3,11 @@ require 'nokogiri'
 
 class BigSitemapTest < Test::Unit::TestCase
   def setup
-   delete_tmp_files
+    delete_tmp_files
   end
 
   def teardown
-   delete_tmp_files
+    delete_tmp_files
   end
 
   should 'raise an error if the :base_url option is not specified' do
@@ -247,13 +247,62 @@ class BigSitemapTest < Test::Unit::TestCase
   end
 
   context 'partial update' do
-    should 'generate for all xml files in directory' do
-      create_sitemap
+    should 'return last two ids' do
+      create_sitemap.clean
       filename = "#{sitemaps_dir}/sitemap_file"
-      @sitemap.clean
-      File.open("#{filename}112312312.xml", 'w')
-      File.open("#{filename}223423423.xml.gz", 'w')
-      assert_equal "223423423", @sitemap.send(:get_last_id, filename)
+      File.open("#{filename}_1.xml", 'w')
+      File.open("#{filename}_9.xml", 'w')
+      File.open("#{filename}_23.xml", 'w')
+      File.open("#{filename}_42.xml.gz", 'w')
+      assert_equal [23, 42], @sitemap.send(:get_two_last_ids, filename)
+    end
+
+    should 'return nil if nothing found two ids' do
+      create_sitemap.clean
+      filename = "#{sitemaps_dir}/sitemap_file"
+      File.open("#{filename}_1.xml", 'w')
+      assert_equal nil, @sitemap.send(:get_two_last_ids, filename)
+    end
+
+    should 'generate for all xml files in directory and delete last file' do
+      create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
+      add_model( :num_items => 50 - 23 ) #TestModel
+      TestModel.id_count = 23
+      filename = "#{sitemaps_dir}/sitemap_test_models"
+
+      File.open("#{filename}_1.xml", 'w')
+      File.open("#{filename}_9.xml", 'w')
+      File.open("#{filename}_23.xml", 'w')
+      File.open("#{filename}_27.xml", 'w')
+
+      @sitemap.generate_update
+
+      assert !File.exists?("#{filename}_27.xml")
+      assert File.exists?("#{filename}_50.xml")
+
+      # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
+
+      elems = elements(unzipped_sitemaps_index_file, 'loc').map(&:text)
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_1.xml"
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_9.xml"
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_50.xml"
+    end
+
+    should 'generate for all xml files in directory and keep last file' do
+      create_sitemap(:partial_update => true, :batch_size => 5, :max_per_sitemap => 5).clean
+      add_model( :num_items => 50 - 23 ) #TestModel
+      TestModel.id_count = 23
+      filename = "#{sitemaps_dir}/sitemap_test_models"
+
+      File.open("#{filename}_23.xml.gz", 'w')
+      File.open("#{filename}_30.xml.gz", 'w')
+
+      @sitemap.generate_update
+
+      #Dir["#{filename}*"].each do |d| puts d; end
+
+      assert File.exists?("#{filename}_30.xml.gz")
+      assert File.exists?("#{filename}_50.xml.gz")
     end
   end
 
@@ -343,7 +392,8 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     def elements(filename, el)
-      data = Nokogiri::XML.parse(Zlib::GzipReader.open(filename).read)
+      file_class = filename.include?('.gz') ? Zlib::GzipReader : File
+      data = Nokogiri::XML.parse(file_class.open(filename).read)
       data.search("//s:#{el}", ns)
     end
 

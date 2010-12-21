@@ -13,6 +13,7 @@ class BigSitemap
       @geo  = options.delete(:geo)
       @paths = []
       @parts = 0
+      @custom_part_nr = options.delete(:partial_update)
 
       if @filename = options.delete(:filename)
         options[:target] = _get_writer
