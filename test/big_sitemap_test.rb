@@ -266,7 +266,7 @@ class BigSitemapTest < Test::Unit::TestCase
       @sitemap = BigSitemap.new({
         :base_url      => 'http://example.com',
         :document_root => tmp_dir,
-        :update_google => false
+        :ping_google => false
       }.update(options))
     end
 
