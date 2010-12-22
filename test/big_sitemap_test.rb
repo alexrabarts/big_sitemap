@@ -270,7 +270,7 @@ class BigSitemapTest < Test::Unit::TestCase
       filename = "#{sitemaps_dir}/sitemap_test_models"
 
       create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
-      add_model( :num_items => 50 - last_id ) #TestModel
+      add_model(:num_items => 50 - last_id) #TestModel
 
       File.open("#{filename}.xml", 'w')
       File.open("#{filename}_5.xml", 'w')
@@ -297,18 +297,20 @@ class BigSitemapTest < Test::Unit::TestCase
       assert elems.include? "http://example.com/sitemaps/sitemap_test_models_48.xml"
     end
 
-    should 'generate sitemap, update should respect old file' do
+    should 'generate sitemap, update should respect old files' do
       max_id = 23
       TestModel.current_id = 0
       filename = "#{sitemaps_dir}/sitemap_test_models"
 
       create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
-      add_model( :num_items => max_id) #TestModel
+      add_model(:num_items => max_id) #TestModel
       @sitemap.generate_update
+
+      # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
 
       assert_equal 5, elements("#{filename}.xml", 'loc').size
       assert_equal 5, elements("#{filename}_6.xml", 'loc').size
-      assert_equal 2, elements("#{filename}_21.xml", 'loc').size
+      assert_equal 3, elements("#{filename}_21.xml", 'loc').size
 
       TestModel.current_id = 20 #last_id is 21, so start with one below
       create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100)
@@ -318,7 +320,7 @@ class BigSitemapTest < Test::Unit::TestCase
       assert_equal 5, elements("#{filename}_6.xml", 'loc').size
       assert_equal 5, elements("#{filename}_21.xml", 'loc').size
 
-     # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
+      # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
 
       elems = elements("#{filename}_26.xml", 'loc').map(&:text)
       (26..30).each do |i|
@@ -327,7 +329,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
       #puts `cat /tmp/sitemaps/sitemap_test_models_41.xml`
 
-      assert_equal 2, elements("#{filename}_46.xml", 'loc').size
+      assert_equal 3, elements("#{filename}_46.xml", 'loc').size
     end
   end
 

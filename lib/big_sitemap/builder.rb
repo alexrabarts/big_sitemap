@@ -34,8 +34,7 @@ class BigSitemap
     end
 
     def add_url!(url, time = nil, frequency = nil, priority = nil, part_nr = nil)
-      _rotate if @max_urls == @urls
-      @parts = part_nr if part_nr && @custom_part_nr
+      _rotate(part_nr) if @max_urls == @urls
 
       tag!(index? ? 'sitemap' : 'url') do
         loc (geo? ? "#{url}.kml" : url)
@@ -86,10 +85,10 @@ class BigSitemap
       _open_tag(index? ? 'sitemapindex' : 'urlset', attrs)
     end
 
-    def _rotate
+    def _rotate(part_nr = nil)
       # write out the current document and start writing into a new file
       close!
-      @parts += 1
+      @parts = (part_nr && @custom_part_nr) ? part_nr : @parts + 1
       @target = _get_writer
       _init_document
     end

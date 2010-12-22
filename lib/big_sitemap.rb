@@ -148,7 +148,8 @@ class BigSitemap
           find_options[key] = options.delete(key)
         end
 
-        count        = model.send(count_method, find_options)
+        count = model.send(count_method, find_options)
+        count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
         num_sitemaps = 1
         num_batches  = 1
 
@@ -165,7 +166,7 @@ class BigSitemap
 
           for batch_num in batch_num_start..batch_num_end
             offset       = ((batch_num - 1) * @options[:batch_size])
-            limit        = (count - offset) < @options[:batch_size] ? (count - offset - 1) : @options[:batch_size]
+            limit        = (count - offset) < @options[:batch_size] ? (count - offset) : @options[:batch_size]
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
 
             model.send(find_method, find_options).each do |record|
