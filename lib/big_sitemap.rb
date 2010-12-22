@@ -135,13 +135,16 @@ class BigSitemap
 
   def generate_models
     for model, options in @sources
-      with_sitemap(model, options) do |sitemap|
+      with_sitemap(model, options.dup) do |sitemap|
         count_method = pick_method(model, COUNT_METHODS)
         find_method  = pick_method(model, FIND_METHODS)
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
         raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-        find_options = options.except(:path, :num_items, :priority, :change_frequency, :last_modified, :location)
+        find_options = {}
+        [:conditions, :limit, :joins, :select, :order, :include, :group].each do |key|
+          find_options[key] = options.delete(key)
+        end
 
         count        = model.send(count_method, find_options)
         num_sitemaps = 1
