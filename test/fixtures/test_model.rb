@@ -1,10 +1,10 @@
 class TestModel
   def to_param
-    object_id
+    id #|| object_id
   end
 
   def id
-    @id ||= TestModel.id_count += 1
+    @id ||= TestModel.current_id += 1
   end
 
   def change_frequency
@@ -35,10 +35,10 @@ class TestModel
       instances
     end
 
-    attr_writer :id_count
+    attr_writer :current_id
 
-    def id_count
-      @id_count ||= 0
+    def current_id
+      @current_id ||= 0
     end
   end
 end

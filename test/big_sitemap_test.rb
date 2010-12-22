@@ -246,63 +246,88 @@ class BigSitemapTest < Test::Unit::TestCase
     end
   end
 
-  context 'partial update' do
-    should 'return last two ids' do
+  context 'get_last_id' do
+    should 'return last id' do
       create_sitemap.clean
       filename = "#{sitemaps_dir}/sitemap_file"
       File.open("#{filename}_1.xml", 'w')
-      File.open("#{filename}_9.xml", 'w')
       File.open("#{filename}_23.xml", 'w')
       File.open("#{filename}_42.xml.gz", 'w')
-      assert_equal [23, 42], @sitemap.send(:get_two_last_ids, filename)
+      File.open("#{filename}_9.xml", 'w')
+      assert_equal 42, @sitemap.send(:get_last_id, filename)
     end
 
-    should 'return nil if nothing found two ids' do
+    should 'return nil' do
       create_sitemap.clean
       filename = "#{sitemaps_dir}/sitemap_file"
-      File.open("#{filename}_1.xml", 'w')
-      assert_equal nil, @sitemap.send(:get_two_last_ids, filename)
+      assert_equal nil, @sitemap.send(:get_last_id, filename)
     end
+  end
 
+  context 'partial update' do
     should 'generate for all xml files in directory and delete last file' do
-      create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
-      add_model( :num_items => 50 - 23 ) #TestModel
-      TestModel.id_count = 23
+      TestModel.current_id = last_id = 27
       filename = "#{sitemaps_dir}/sitemap_test_models"
 
-      File.open("#{filename}_1.xml", 'w')
+      create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
+      add_model( :num_items => 50 - last_id ) #TestModel
+
+      File.open("#{filename}.xml", 'w')
+      File.open("#{filename}_5.xml", 'w')
       File.open("#{filename}_9.xml", 'w')
       File.open("#{filename}_23.xml", 'w')
-      File.open("#{filename}_27.xml", 'w')
-
+      File.open("#{filename}_#{last_id}.xml", 'w')
       @sitemap.generate_update
-
-      assert !File.exists?("#{filename}_27.xml")
-      assert File.exists?("#{filename}_50.xml")
 
       # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
 
+      assert File.exists?("#{filename}_48.xml")
+      assert File.exists?("#{filename}_#{last_id}.xml")
+      elems = elements("#{filename}_#{last_id}.xml", 'loc').map(&:text)
+
+      assert_equal 5, elems.size
+      (28..32).each do |i|
+        assert elems.include? "http://example.com/test_models/#{i}"
+      end
+
       elems = elements(unzipped_sitemaps_index_file, 'loc').map(&:text)
-      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_1.xml"
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models.xml"
       assert elems.include? "http://example.com/sitemaps/sitemap_test_models_9.xml"
-      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_50.xml"
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_#{last_id}.xml"
+      assert elems.include? "http://example.com/sitemaps/sitemap_test_models_48.xml"
     end
 
-    should 'generate for all xml files in directory and keep last file' do
-      create_sitemap(:partial_update => true, :batch_size => 5, :max_per_sitemap => 5).clean
-      add_model( :num_items => 50 - 23 ) #TestModel
-      TestModel.id_count = 23
+    should 'generate sitemap, update should respect old file' do
+      max_id = 23
+      TestModel.current_id = 0
       filename = "#{sitemaps_dir}/sitemap_test_models"
 
-      File.open("#{filename}_23.xml.gz", 'w')
-      File.open("#{filename}_30.xml.gz", 'w')
-
+      create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
+      add_model( :num_items => max_id) #TestModel
       @sitemap.generate_update
 
-      #Dir["#{filename}*"].each do |d| puts d; end
+      assert_equal 5, elements("#{filename}.xml", 'loc').size
+      assert_equal 5, elements("#{filename}_6.xml", 'loc').size
+      assert_equal 2, elements("#{filename}_21.xml", 'loc').size
 
-      assert File.exists?("#{filename}_30.xml.gz")
-      assert File.exists?("#{filename}_50.xml.gz")
+      TestModel.current_id = 20 #last_id is 21, so start with one below
+      create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100)
+      add_model( :num_items => 48 - TestModel.current_id ) #TestModel
+      @sitemap.generate_update
+
+      assert_equal 5, elements("#{filename}_6.xml", 'loc').size
+      assert_equal 5, elements("#{filename}_21.xml", 'loc').size
+
+     # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
+
+      elems = elements("#{filename}_26.xml", 'loc').map(&:text)
+      (26..30).each do |i|
+         assert elems.include? "http://example.com/test_models/#{i}"
+      end
+
+      #puts `cat /tmp/sitemaps/sitemap_test_models_41.xml`
+
+      assert_equal 2, elements("#{filename}_46.xml", 'loc').size
     end
   end
 

@@ -7,12 +7,12 @@ class BigSitemap
     MAX_URLS = 50000
 
     def initialize(options)
-      @gzip = options.delete(:gzip)
-      @max_urls = options.delete(:max_urls) || MAX_URLS
-      @type = options.delete(:type)
-      @geo  = options.delete(:geo)
-      @paths = []
-      @parts = 0
+      @gzip           = options.delete(:gzip)
+      @max_urls       = options.delete(:max_urls) || MAX_URLS
+      @type           = options.delete(:type)
+      @geo            = options.delete(:geo)
+      @paths          = []
+      @parts          = options.delete(:start_part_id) || 0
       @custom_part_nr = options.delete(:partial_update)
 
       if @filename = options.delete(:filename)
@@ -34,8 +34,8 @@ class BigSitemap
     end
 
     def add_url!(url, time = nil, frequency = nil, priority = nil, part_nr = nil)
-      @parts = part_nr if part_nr && @custom_part_nr
       _rotate if @max_urls == @urls
+      @parts = part_nr if part_nr && @custom_part_nr
 
       tag!(index? ? 'sitemap' : 'url') do
         loc (geo? ? "#{url}.kml" : url)

@@ -110,11 +110,12 @@ class BigSitemap
 
   #create only sitemap for new items since last generation. Takes ids from filename
   def generate_update
-    @files_to_clean = []
+    @files_to_move = []
     @sources.map do |model, options|
-      if options[:partial_update] && last_two_ids = get_two_last_ids(options[:filename])
-        options[:conditions] = [options[:conditions], "(id > #{last_two_ids.first})"].compact.join(' AND ')
-        @files_to_clean << "#{options[:filename]}_#{last_two_ids.last}"
+      if options[:partial_update] && last_id = get_last_id(options[:filename])
+        options[:conditions]    = [options[:conditions], "(id >= #{last_id})"].compact.join(' AND ')
+        options[:start_part_id] = last_id
+        #@files_to_move << ["#{options[:filename]}_#{last_id}_new", "#{options[:filename]}_#{last_id}"]
       end
       [model, options]
     end
@@ -122,13 +123,14 @@ class BigSitemap
     generate_models
 
     generate_static
-
-    @files_to_clean.each do |file_pattern|
-       Dir["#{file_pattern}*.{xml,xml.gz}"].each do |file|
-         next if @sitemap_files.include?( file )
-         FileUtils.rm file
-      end
-    end
+    
+    ### XXX keep in mind: way may write AND read from the file at the same time. to rpevent this, execute a mv afterwards
+    #@files_to_move.each do |file_from, file_to|
+    #  Dir["#{file_pattern}*.{xml,xml.gz}"].each do |file|
+    #    next unless File.exists?(file_from)
+    #    FileUtils.mv(file_from, file_to, :force => true)
+    #  end
+    #end
 
     generate_sitemap_index
   end
@@ -209,7 +211,7 @@ class BigSitemap
 
   def generate_static
     return if Array(@static_pages).empty?
-    with_sitemap('static') do |sitemap|
+    with_sitemap('static', :type => 'static') do |sitemap|
       @static_pages.each do |location, last_mod, freq, pri|
         sitemap.add_url!(location, last_mod, freq, pri)
       end
@@ -261,8 +263,8 @@ class BigSitemap
 
   def with_sitemap(name, options={})
     options[:filename] ||= file_name(name)
-    options[:max_urls]   = @options[:max_per_index] if options[:type] == 'index'
-    options[:max_urls] ||= @options[:max_per_sitemap]
+    options[:type]     ||= 'sitemap'
+    options[:max_urls] ||= @options["max_per_#{options[:type]}".to_sym]
     options[:geo]      ||= @options[:geo]
     options[:gzip]     ||= @options[:gzip]
     options[:indent]     = options[:gzip] ? 0 : 2
@@ -281,10 +283,10 @@ class BigSitemap
     str.sub(/^\//, '')
   end
 
-  def get_two_last_ids(filename)
+  def get_last_id(filename)
     Dir["#{filename}*.{xml,xml.gz}"].map do |file|
       file.to_s.scan(/#{filename}_(.+).xml/).flatten.last.to_i
-    end.sort[-2..-1]
+    end.sort.last
   end
 
   def pick_method(model, candidates)
