@@ -123,7 +123,7 @@ class BigSitemap
     generate_models
 
     generate_static
-    
+
     ### XXX keep in mind: way may write AND read from the file at the same time. to rpevent this, execute a mv afterwards
     #@files_to_move.each do |file_from, file_to|
     #  Dir["#{file_pattern}*.{xml,xml.gz}"].each do |file|
@@ -138,6 +138,7 @@ class BigSitemap
   def generate_models
     for model, options in @sources
       with_sitemap(model, options.dup) do |sitemap|
+        last_id = nil #id of last processed item
         count_method = pick_method(model, COUNT_METHODS)
         find_method  = pick_method(model, FIND_METHODS)
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
@@ -148,7 +149,7 @@ class BigSitemap
           find_options[key] = options.delete(key)
         end
 
-        count = model.send(count_method, find_options)
+        count = model.send(count_method, find_options.merge(:select => "*", :include => nil))
         count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
         num_sitemaps = 1
         num_batches  = 1
@@ -168,6 +169,11 @@ class BigSitemap
             offset       = ((batch_num - 1) * @options[:batch_size])
             limit        = (count - offset) < @options[:batch_size] ? (count - offset) : @options[:batch_size]
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
+
+            if last_id
+              find_options.update(:limit => limit, :offset => nil)
+              find_options.update(:conditions => [find_options[:conditions], "(id > #{last_id})"].compact.join(' AND '))
+            end
 
             model.send(find_method, find_options).each do |record|
               last_mod = options[:last_modified]
@@ -193,8 +199,8 @@ class BigSitemap
               priority = options[:priority]
               pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
-              id = record.respond_to?(:id) ? record.id : nil
-              sitemap.add_url!(location, last_mod, freq, pri, id)
+              last_id = record.respond_to?(:id) ? record.id : nil
+              sitemap.add_url!(location, last_mod, freq, pri, last_id)
             end
           end
         end
