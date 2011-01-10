@@ -37,7 +37,7 @@ class BigSitemap
       _rotate(part_nr) if @max_urls == @urls
 
       tag!(index? ? 'sitemap' : 'url') do
-        tag! 'loc' (geo? ? "#{url}.kml" : url)
+        tag! 'loc', (geo? ? "#{url}.kml" : url)
         # W3C format is the subset of ISO 8601
         tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') unless time.nil?
         tag! 'changefreq', frequency unless frequency.nil?

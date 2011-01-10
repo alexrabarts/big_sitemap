@@ -5,12 +5,11 @@ begin
   Jeweler::Tasks.new do |s|
     s.name = "big_sitemap"
     s.summary = %Q{A Sitemap generator specifically designed for large sites (although it works equally well with small sites)}
-    s.email = "alexrabarts@gmail.com"
-    s.homepage = "http://github.com/alexrabarts/big_sitemap"
+    s.email = %w(tobi@soundcloud.com alexrabarts@gmail.com)
+    s.homepage = "http://github.com/rngtng/big_sitemap"
     s.description = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
-    s.authors = ["Alex Rabarts"]
+    s.authors = ["Tobias Bielohlawek", "Alex Rabarts"]
     s.add_dependency 'builder', ['>=2.1.2']
-    s.add_dependency 'extlib', ['>=0.9.9']
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
