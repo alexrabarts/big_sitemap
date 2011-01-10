@@ -3,12 +3,6 @@ require 'fileutils'
 
 require 'big_sitemap/builder'
 
-if defined? Rails
-  require 'action_controller'
-else
-  require 'extlib'
-end
-
 class BigSitemap
   DEFAULTS = {
     :max_per_sitemap => Builder::MAX_URLS,
@@ -28,13 +22,10 @@ class BigSitemap
   TIMESTAMP_METHODS = [:updated_at, :updated_on, :updated, :created_at, :created_on, :created]
   PARAM_METHODS     = [:to_param, :id]
 
-  include ActionController::UrlWriter if defined? Rails
-
   def initialize(options)
     @options = DEFAULTS.merge options
 
-    # Use Rails' default_url_options if available
-    @default_url_options = defined?(Rails) ? default_url_options : {}
+    @default_url_options = {}
 
     if @options[:max_per_sitemap] <= 1
       raise ArgumentError, '":max_per_sitemap" must be greater than 1'
@@ -55,13 +46,7 @@ class BigSitemap
       raise ArgumentError, '":batch_size" must be less than ":max_per_sitemap"'
     end
 
-    @options[:document_root] ||= begin
-      if defined? Rails
-        "#{Rails.root}/public"
-      elsif defined? Merb
-        "#{Merb.root}/public"
-      end
-    end
+    @options[:document_root] ||= document_root
 
     unless @options[:document_root]
       raise ArgumentError, 'Document root must be specified with the ":document_root" option'
@@ -89,16 +74,15 @@ class BigSitemap
   end
 
   def table_name(model)
-    if defined? Rails
-      model.table_name
-    else
-      Extlib::Inflection.tableize(model.to_s)
-    end
+    model.table_name
   end
 
   def file_name(name)
     name = table_name(name) unless name.is_a? String
     "#{@file_path}/sitemap_#{name}#{'_kml' if @options[:geo]}"
+  end
+
+  def document_root
   end
 
   def clean
@@ -321,4 +305,38 @@ class BigSitemap
       end
     end
   end
+end
+
+
+
+class BigSitemapRails < BigSitemap
+
+  def initialize(options)
+    require 'action_controller'
+    super
+    @default_url_options = default_url_options
+  end
+
+  def document_root
+    "#{Rails.root}/public"
+  end
+end
+
+
+
+class BigSitemapMerb < BigSitemap
+
+  def initialize(options)
+    require 'extlib'
+    super
+  end
+
+  def document_root
+    "#{Merb.root}/public"
+  end
+
+  def table_name(model)
+    Extlib::Inflection.tableize(model.to_s)
+  end
+
 end

@@ -20,6 +20,10 @@ class TestModel
   end
 
   class << self
+    def table_name
+      'test_models'
+    end
+
     def count_for_sitemap
       self.find_for_sitemap.size
     end
