@@ -1,50 +1,41 @@
 require 'fileutils'
-require 'builder'
 require 'zlib'
 
 class BigSitemap
-  class Builder < Builder::XmlMarkup
+  class Builder
     MAX_URLS = 50000
 
     def initialize(options)
       @gzip           = options.delete(:gzip)
       @max_urls       = options.delete(:max_urls) || MAX_URLS
       @type           = options.delete(:type)
-      @geo            = options.delete(:geo)
       @paths          = []
       @parts          = options.delete(:start_part_id) || 0
       @custom_part_nr = options.delete(:partial_update)
 
-      if @filename = options.delete(:filename)
-        options[:target] = _get_writer
-      end
+      @filename = options.delete(:filename)
+      @target = _get_writer
 
-      super(options)
-
+      @level = 0
       @opened_tags = []
       _init_document
-    end
-
-    def index?
-      @type == 'index'
-    end
-
-    def geo?
-      !index? && @geo == true
     end
 
     def add_url!(url, time = nil, frequency = nil, priority = nil, part_nr = nil)
       _rotate(part_nr) if @max_urls == @urls
 
-      tag!(index? ? 'sitemap' : 'url') do
-        tag! 'loc', (geo? ? "#{url}.kml" : url)
-        # W3C format is the subset of ISO 8601
-        tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') unless time.nil?
-        tag! 'changefreq', frequency unless frequency.nil?
-        tag! 'priority', priority unless priority.nil?
-        _build_geo if geo?
-      end
+      _open_tag 'url'
+      tag! 'loc', url
+      tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if time
+      tag! 'changefreq', frequency if frequency
+      tag! 'priority', priority if priority
+      _close_tag 'url'
+
       @urls += 1
+    end
+
+    def paths!
+      @paths
     end
 
     def close!
@@ -52,22 +43,18 @@ class BigSitemap
       target!.close if target!.respond_to?(:close)
     end
 
-    def paths!
-      @paths
+    def target!
+      @target
     end
 
     private
 
     def _get_writer
-      if @filename
-        filename = @filename.dup
-        filename << "_#{@parts}" if @parts > 0
-        filename << '.xml'
-        filename << '.gz' if @gzip
-        _open_writer(filename)
-      else
-        target!
-      end
+      filename = @filename.dup
+      filename << "_#{@parts}" if @parts > 0
+      filename << '.xml'
+      filename << '.gz' if @gzip
+      _open_writer(filename)
     end
 
     def _open_writer(filename)
@@ -76,13 +63,11 @@ class BigSitemap
       @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 
-    def _init_document
+    def _init_document( name = 'urlset', attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'})
       @urls = 0
-      instruct!
-      # define root element and namespaces
-      attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
-      attrs['xmlns:geo'] = "http://www.google.com/geo/schemas/sitemap/1.0" if geo?
-      _open_tag(index? ? 'sitemapindex' : 'urlset', attrs)
+      target!.print '<?xml version="1.0" encoding="UTF-8"?>'
+      _newline
+      _open_tag name, attrs
     end
 
     def _rotate(part_nr = nil)
@@ -93,31 +78,30 @@ class BigSitemap
       _init_document
     end
 
-    # add support for:
-    #   xml.open_foo!(attrs)
-    #   xml.close_foo!
-    def method_missing(method, *args, &block)
-      if method.to_s =~ /^(open|close)_(.+)!$/
-        operation, name = $1, $2
-        name = "#{name}:#{args.shift}" if Symbol === args.first
-
-        if 'open' == operation
-          _open_tag(name, args.first)
-        else
-          _close_tag(name)
-        end
-      else
-        super
-      end
-    end
-
     # opens a tag, bumps up level but doesn't require a block
-    def _open_tag(name, attrs)
+    def _open_tag(name, attrs = {})
       _indent
       _start_tag(name, attrs)
       _newline
       @level += 1
       @opened_tags << name
+    end
+
+    def _start_tag(name, attrs = {})
+      attrs = attrs.map { |attr,value| %Q( #{attr}="#{value}") }.join('')
+      target!.print "<#{name}#{attrs}>"
+    end
+
+    def tag!(name, content, attrs = {})
+      _indent
+      _start_tag(name, attrs)
+      target!.print content
+      _end_tag(name)
+      _newline
+    end
+
+    def _end_tag(name)
+      target!.print "</#{name}>"
     end
 
     # closes a tag block by decreasing the level and inserting a close tag
@@ -135,11 +119,39 @@ class BigSitemap
       end
     end
 
-    def _build_geo
-      geo :geo do
-        geo :format, 'kml'
-      end
+    def _indent
+      return if @gzip
+      target!.print "  " * @level
     end
 
+    def _newline
+      return if @gzip
+      target!.puts ''
+    end
   end
+
+  class IndexBuilder < Builder
+    def _init_document(name = 'sitemapindex', attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'})
+      attrs.merge('xmlns:geo' => "http://www.google.com/geo/schemas/sitemap/1.0")
+      super(name, attrs)
+    end
+
+    def add_url!(url, time = nil)
+      _open_tag 'sitemap'
+      tag! 'loc', url
+      tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if time
+      _close_tag 'sitemap'
+    end
+  end
+
+  class GeoBuilder < Builder
+    #_build_geo if @geo
+
+    # def _build_geo
+    #   geo :geo do
+    #     geo :format, 'kml'
+    #   end
+    # end
+  end
+
 end

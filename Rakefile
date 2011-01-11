@@ -9,7 +9,6 @@ begin
     s.homepage = "http://github.com/rngtng/big_sitemap"
     s.description = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
     s.authors = ["Tobias Bielohlawek", "Alex Rabarts"]
-    s.add_dependency 'builder', ['>=2.1.2']
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"

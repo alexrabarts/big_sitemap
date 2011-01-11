@@ -25,7 +25,7 @@ class BigSitemap
   def initialize(options)
     @options = DEFAULTS.merge options
 
-    @default_url_options = {}
+    @default_url_options = options.delete(:default_url_options) || {}
 
     if @options[:max_per_sitemap] <= 1
       raise ArgumentError, '":max_per_sitemap" must be greater than 1'
@@ -64,13 +64,13 @@ class BigSitemap
     options[:filename]       ||= file_name(model)
     options[:partial_update] ||= @options[:partial_update]
     @sources << [model, options.dup]
-    return self
+    self
   end
 
   def add_static(url, time = nil, frequency = nil, priority = nil)
     @static_pages ||= []
     @static_pages << [url, time, frequency, priority]
-    return self
+    self
   end
 
   def table_name(model)
@@ -79,7 +79,7 @@ class BigSitemap
 
   def file_name(name)
     name = table_name(name) unless name.is_a? String
-    "#{@file_path}/sitemap_#{name}#{'_kml' if @options[:geo]}"
+    "#{@file_path}/sitemap_#{name}"
   end
 
   def document_root
@@ -89,7 +89,7 @@ class BigSitemap
     Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"].each do |file|
       FileUtils.rm file
     end
-    return self
+    self
   end
 
   #create only sitemap for new items since last generation. Takes ids from filename
@@ -190,14 +190,14 @@ class BigSitemap
         end
       end
     end
-    return self
+    self
   end
 
   def generate
     generate_models
     generate_static
     generate_sitemap_index(@sitemap_files)
-    return self
+    self
   end
 
   def generate_static
@@ -256,11 +256,17 @@ class BigSitemap
     options[:filename] ||= file_name(name)
     options[:type]     ||= 'sitemap'
     options[:max_urls] ||= @options["max_per_#{options[:type]}".to_sym]
-    options[:geo]      ||= @options[:geo]
     options[:gzip]     ||= @options[:gzip]
     options[:indent]     = options[:gzip] ? 0 : 2
 
-    sitemap = Builder.new(options)
+    sitemap = if options[:type] == 'index'
+      IndexBuilder.new(options)
+    elsif options[:geo]
+      options[:filename] << '_kml'
+      GeoBuilder.new(options)
+    else
+      Builder.new(options)
+    end
 
     begin
       yield sitemap
@@ -311,10 +317,12 @@ end
 
 class BigSitemapRails < BigSitemap
 
+  include ActionController::UrlWriter if defined? Rails
+
   def initialize(options)
     require 'action_controller'
-    super
-    @default_url_options = default_url_options
+
+    super options.merge(:default_url_options => default_url_options)
   end
 
   def document_root
