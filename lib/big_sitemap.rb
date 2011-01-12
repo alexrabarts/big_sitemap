@@ -73,6 +73,17 @@ class BigSitemap
     self
   end
 
+  def with_lock
+    lock!
+    begin
+      yield
+    ensure
+      unlock!
+    end
+  rescue Errno::EACCES => e
+    STDERR.puts "Lockfile exists"
+  end
+
   def table_name(model)
     model.table_name
   end
@@ -251,6 +262,14 @@ class BigSitemap
   end
 
   private
+
+  def lock!(lock_file = 'generator.lock')
+    File.open("#{@file_path}/#{lock_file}", 'w', File::EXCL)
+  end
+
+  def unlock!(lock_file = 'generator.lock')
+    FileUtils.rm "#{@file_path}/#{lock_file}"
+  end
 
   def with_sitemap(name, options={})
     options[:filename] ||= file_name(name)

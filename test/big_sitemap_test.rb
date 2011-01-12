@@ -331,6 +331,45 @@ class BigSitemapTest < Test::Unit::TestCase
 
       assert_equal 3, elements("#{filename}_46.xml", 'loc').size
     end
+
+    context 'lockfile' do
+      should 'create and delete lock file' do
+        sitemap = BigSitemap.new(:base_url => 'http://example.com', :document_root => tmp_dir)
+
+        sitemap.with_lock do
+          assert File.exists?('/tmp/sitemaps/generator.lock')
+        end
+
+        assert !File.exists?('/tmp/sitemaps/generator.lock')
+      end
+
+      should 'not catch error not related to lock' do
+        sitemap = BigSitemap.new(:base_url => 'http://example.com', :document_root => tmp_dir)
+
+        assert_raise RuntimeError do
+          sitemap.with_lock do
+            raise "Wrong"
+          end
+        end
+
+      end
+
+      should 'throw error if lock exits' do
+        sitemap = BigSitemap.new(:base_url => 'http://example.com', :document_root => tmp_dir)
+
+        sitemap.with_lock do
+          sitemap2 = BigSitemap.new(:base_url => 'http://example.com', :document_root => tmp_dir)
+
+          assert_nothing_raised do
+            sitemap2.with_lock do
+              raise "Should not be called"
+            end
+          end
+
+        end
+      end
+
+    end
   end
 
   private
