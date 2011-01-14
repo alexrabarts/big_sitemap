@@ -186,10 +186,22 @@ class BigSitemapTest < Test::Unit::TestCase
     should 'should generate static content' do
       create_sitemap
       @sitemap.add_static('/', Time.now, 'weekly', 0.5)
-      @sitemap.add_static('/about', Time.now, 'weekly', 0.5).generate_static
+      @sitemap.add_static('/about', Time.now, 'weekly', 0.5)
+      @sitemap.generate_static
       elems = elements(static_sitemaps_file, 'loc')
       assert_equal "/", elems.first.text
       assert_equal "/about", elems.last.text
+    end
+  end
+
+  context 'sanatize XML chars' do
+    should 'should transform ampersands' do
+      create_sitemap
+      @sitemap.add_static('/something&else', Time.now, 'weekly', 0.5)
+      @sitemap.generate_static
+      elems = elements(static_sitemaps_file, 'loc')
+      assert Zlib::GzipReader.open(static_sitemaps_file).read.include?("/something&amp;else")
+      assert_equal "/something&else", elems.first.text
     end
   end
 

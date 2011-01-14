@@ -106,7 +106,7 @@ class BigSitemap
     def tag!(name, content, attrs = {})
       _indent
       _start_tag(name, attrs)
-      target!.print content
+      target!.print content.to_s.gsub('&', '&amp;')
       _end_tag(name)
       _newline
     end
