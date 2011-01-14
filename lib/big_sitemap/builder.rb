@@ -4,6 +4,11 @@ require 'zlib'
 class BigSitemap
   class Builder
     MAX_URLS = 50000
+    HEADER_ATTRIBUTES = {
+      'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9',
+      'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
+      'xsi:schemaLocation' => "http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" 
+    }
 
     def initialize(options)
       @gzip           = options.delete(:gzip)
@@ -69,7 +74,7 @@ class BigSitemap
       @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 
-    def _init_document( name = 'urlset', attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'})
+    def _init_document( name = 'urlset', attrs = HEADER_ATTRIBUTES)
       @urls = 0
       target!.print '<?xml version="1.0" encoding="UTF-8"?>'
       _newline
