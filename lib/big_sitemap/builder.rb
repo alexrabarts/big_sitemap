@@ -14,6 +14,8 @@ class BigSitemap
       @custom_part_nr = options.delete(:partial_update)
 
       @filename = options.delete(:filename)
+      @current_filename = nil
+      @tmp_filename     = nil
       @target = _get_writer
 
       @level = 0
@@ -41,6 +43,8 @@ class BigSitemap
     def close!
       _close_document
       target!.close if target!.respond_to?(:close)
+      File.delete(@current_filename) if File.exists?(@current_filename)
+      File.rename(@tmp_filename, @current_filename)
     end
 
     def target!
@@ -58,8 +62,10 @@ class BigSitemap
     end
 
     def _open_writer(filename)
-      file = ::File.open(filename, 'w+')
+      @current_filename = filename
+      @tmp_filename     = filename + ".tmp"
       @paths << filename
+      file = ::File.open(@tmp_filename, 'w+')
       @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 

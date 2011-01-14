@@ -119,14 +119,6 @@ class BigSitemap
 
     generate_static
 
-    ### XXX keep in mind: way may write AND read from the file at the same time. to rpevent this, execute a mv afterwards
-    #@files_to_move.each do |file_from, file_to|
-    #  Dir["#{file_pattern}*.{xml,xml.gz}"].each do |file|
-    #    next unless File.exists?(file_from)
-    #    FileUtils.mv(file_from, file_to, :force => true)
-    #  end
-    #end
-
     generate_sitemap_index
   end
 
