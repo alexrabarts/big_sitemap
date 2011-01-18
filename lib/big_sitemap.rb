@@ -60,9 +60,9 @@ class BigSitemap
   end
 
   def add(model, options={})
-    options[:path]           ||= table_name(model)
-    options[:filename]       ||= file_name(model)
-    options[:partial_update] ||= @options[:partial_update]
+    options[:path]         ||= table_name(model)
+    options[:filename]     ||= file_name(model)
+    options[:partial_update] = @options[:partial_update] if options[:partial_update].nil?
     @sources << [model, options.dup]
     self
   end
