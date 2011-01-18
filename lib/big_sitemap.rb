@@ -108,9 +108,10 @@ class BigSitemap
     @files_to_move = []
     @sources.map do |model, options|
       if options[:partial_update] && last_id = get_last_id(options[:filename])
-        options[:conditions]    = [options[:conditions], "(id >= #{last_id})"].compact.join(' AND ')
+        primary_column          = options[:primary_column] || 'id'
+        primary_column_value    = last_id.to_s.gsub("'", %q(\\\')) #escape '
+        options[:conditions]    = [options[:conditions], "(#{primary_column} >= '#{primary_column_value}')"].compact.join(' AND ')
         options[:start_part_id] = last_id
-        #@files_to_move << ["#{options[:filename]}_#{last_id}_new", "#{options[:filename]}_#{last_id}"]
       end
       [model, options]
     end
@@ -136,7 +137,10 @@ class BigSitemap
           find_options[key] = options.delete(key)
         end
 
-        count = model.send(count_method, find_options.merge(:select => "*", :include => nil))
+        primary_column   = options.delete(:primary_column)
+        primary_column ||= 'id' if model.new.respond_to?('id')
+
+        count = model.send(count_method, find_options.merge(:select => (primary_column || '*'), :include => nil))
         count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
         num_sitemaps = 1
         num_batches  = 1
@@ -153,13 +157,14 @@ class BigSitemap
           batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
 
           for batch_num in batch_num_start..batch_num_end
-            offset       = ((batch_num - 1) * @options[:batch_size])
-            limit        = (count - offset) < @options[:batch_size] ? (count - offset) : @options[:batch_size]
+            offset        = (batch_num - 1) * @options[:batch_size]
+            limit         = (count - offset) < @options[:batch_size] ? (count - offset) : @options[:batch_size]
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
 
-            if last_id
+            if last_id && primary_column
               find_options.update(:limit => limit, :offset => nil)
-              find_options.update(:conditions => [find_options[:conditions], "(id > #{last_id})"].compact.join(' AND '))
+              primary_column_value = last_id.to_s.gsub("'", %q(\\\')) #escape '
+              find_options.update(:conditions => [find_options[:conditions], "(#{primary_column} > '#{primary_column_value}')"].compact.join(' AND '))
             end
 
             model.send(find_method, find_options).each do |record|
@@ -186,7 +191,7 @@ class BigSitemap
               priority = options[:priority]
               pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
-              last_id = record.respond_to?(:id) ? record.id : nil
+              last_id = primary_column ? record.send(primary_column) : nil
               sitemap.add_url!(location, last_mod, freq, pri, last_id)
             end
           end
