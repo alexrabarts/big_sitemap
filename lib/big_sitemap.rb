@@ -60,9 +60,10 @@ class BigSitemap
   end
 
   def add(model, options={})
-    options[:path]         ||= table_name(model)
-    options[:filename]     ||= file_name(model)
-    options[:partial_update] = @options[:partial_update] if options[:partial_update].nil?
+    options[:path]           ||= table_name(model)
+    options[:filename]       ||= file_name(model)
+    options[:primary_column] ||= 'id' if model.new.respond_to?('id')
+    options[:partial_update]   = @options[:partial_update] && options[:partial_update] != false
     @sources << [model, options.dup]
     self
   end
@@ -103,24 +104,13 @@ class BigSitemap
     self
   end
 
-  #create only sitemap for new items since last generation. Takes ids from filename
-  def generate_update
-    @files_to_move = []
-    @sources.map do |model, options|
-      if options[:partial_update] && last_id = get_last_id(options[:filename])
-        primary_column          = options[:primary_column] || 'id'
-        primary_column_value    = last_id.to_s.gsub("'", %q(\\\')) #escape '
-        options[:conditions]    = [options[:conditions], "(#{primary_column} >= '#{primary_column_value}')"].compact.join(' AND ')
-        options[:start_part_id] = last_id
-      end
-      [model, options]
-    end
+  def generate
+    prepare_update
 
     generate_models
-
     generate_static
-
     generate_sitemap_index
+    self
   end
 
   def generate_models
@@ -138,7 +128,6 @@ class BigSitemap
         end
 
         primary_column   = options.delete(:primary_column)
-        primary_column ||= 'id' if model.new.respond_to?('id')
 
         count = model.send(count_method, find_options.merge(:select => (primary_column || '*'), :include => nil))
         count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
@@ -201,20 +190,26 @@ class BigSitemap
     self
   end
 
-  def generate
-    generate_models
-    generate_static
-    generate_sitemap_index(@sitemap_files)
-    self
-  end
-
   def generate_static
-    return if Array(@static_pages).empty?
+    return self if Array(@static_pages).empty?
     with_sitemap('static', :type => 'static') do |sitemap|
       @static_pages.each do |location, last_mod, freq, pri|
         sitemap.add_url!(location, last_mod, freq, pri)
       end
     end
+    self
+  end
+
+  # Create a sitemap index document
+  def generate_sitemap_index(files = nil)
+    files ||= Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"]
+    with_sitemap 'index', :type => 'index' do |sitemap|
+      for path in files
+        next if path =~ /index/
+        sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
+      end
+    end
+    self
   end
 
   def ping_search_engines
@@ -259,6 +254,17 @@ class BigSitemap
   end
 
   private
+
+  def prepare_update
+    @files_to_move = []
+    @sources.each do |model, options|
+      if options[:partial_update] && primary_column = options[:primary_column] && last_id = get_last_id(options[:filename])
+        primary_column_value       = last_id.to_s.gsub("'", %q(\\\')) #escape '
+        options[:conditions]       = [options[:conditions], "(#{primary_column} >= '#{primary_column_value}')"].compact.join(' AND ')
+        options[:start_part_id]    = last_id
+      end
+    end
+  end
 
   def lock!(lock_file = 'generator.lock')
     File.open("#{@file_path}/#{lock_file}", 'w', File::EXCL)
@@ -317,16 +323,6 @@ class BigSitemap
     [root_url, @options[:path], File.basename(path)].compact.join('/')
   end
 
-  # Create a sitemap index document
-  def generate_sitemap_index(files = nil)
-    files ||= Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"]
-    with_sitemap 'index', :type => 'index' do |sitemap|
-      for path in files
-        next if path =~ /index/
-        sitemap.add_url!(url_for_sitemap(path), File.stat(path).mtime)
-      end
-    end
-  end
 end
 
 

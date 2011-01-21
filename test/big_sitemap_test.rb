@@ -289,7 +289,7 @@ class BigSitemapTest < Test::Unit::TestCase
       File.open("#{filename}_9.xml", 'w')
       File.open("#{filename}_23.xml", 'w')
       File.open("#{filename}_#{last_id}.xml", 'w')
-      @sitemap.generate_update
+      @sitemap.generate
 
       # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
 
@@ -316,7 +316,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
       create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100).clean
       add_model(:num_items => max_id) #TestModel
-      @sitemap.generate_update
+      @sitemap.generate
 
       # Dir["#{sitemaps_dir}/*"].each do |d| puts d; end
 
@@ -327,7 +327,7 @@ class BigSitemapTest < Test::Unit::TestCase
       TestModel.current_id = 20 #last_id is 21, so start with one below
       create_sitemap(:partial_update => true, :gzip => false, :batch_size => 5, :max_per_sitemap => 5, :max_per_index => 100)
       add_model( :num_items => 48 - TestModel.current_id ) #TestModel
-      @sitemap.generate_update
+      @sitemap.generate
 
       assert_equal 5, elements("#{filename}_6.xml", 'loc').size
       assert_equal 5, elements("#{filename}_21.xml", 'loc').size
