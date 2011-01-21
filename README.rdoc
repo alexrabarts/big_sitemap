@@ -1,6 +1,6 @@
 = BigSitemap
 
-BigSitemap is a Sitemap (http://sitemaps.org) generator suitable for applications with greater than 50,000 URLs.  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries to minimize memory usage, can be set up with just a few lines of code and is compatible with just about any framework.
+BigSitemap is a Sitemap (http://sitemaps.org) generator suitable for applications with greater than 50,000 URLs.  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries to minimize memory usage, supports increment updates, can be set up with just a few lines of code and is compatible with just about any framework.
 
 BigSitemap is best run periodically through a Rake/Thor task.
 
@@ -19,6 +19,9 @@ BigSitemap is best run periodically through a Rake/Thor task.
     :priority         => 0.5
   })
 
+  # Add a static resource
+  sitemap.add_static("http://example.com/about", Time.now, 'montly', 0.1)
+
   # Generate the files
   sitemap.generate
 
@@ -27,6 +30,7 @@ The code above will create a minimum of three files:
 1. public/sitemaps/sitemap_index.xml.gz
 2. public/sitemaps/sitemap_products.xml.gz
 3. public/sitemaps/sitemap_posts.xml.gz
+4. public/sitemaps/sitemap_static.xml.gz
 
 If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_products_1.xml.gz</code>, <code>sitemap_products_2.xml.gz</code>, ...).
 
@@ -36,11 +40,13 @@ If you're using Rails then the URLs for each database record are generated with 
 
 If the <code>to_param</code> method does not exist, then <code>id</code> will be used.
 
+
+
 == Install
 
 Via gem:
 
-  sudo gem install alexrabarts-big_sitemap -s http://gems.github.com
+  sudo gem install big_sitemap
 
 == Advanced
 
@@ -57,6 +63,8 @@ Via gem:
 * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
 * <code>:ping_bing</code> -- <code>false</code>
 * <code>:ping_ask</code> -- <code>false</code>
+* <code>:partial_update</code> -- <code>false</code>
+
 
 === Chaining
 
@@ -75,7 +83,7 @@ To ping search engines, call <code>ping_search_engines</code> after you generate
 
 You can control "changefreq", "priority" and "lastmod" values for each record individually by passing lambdas instead of fixed values:
 
-  sitemap.add(Posts,
+  sitemap.add(Post,
     :change_frequency => lambda {|post| ... },
     :priority         => lambda {|post| ... },
     :last_modified    => lambda {|post| ... }
@@ -87,7 +95,39 @@ Your models must provide either a <code>find_for_sitemap</code> or <code>all</co
 
 Additionally, you models must provide a <code>count_for_sitemap</code> or <code>count</code> class method that returns a count of the instances to be included.
 
-If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you don't need to do anything unless you want to include a subset of records.  If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
+If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you can make use of any supported parameter: (:conditions, :limit, :joins, :select, :order, :include, :group)
+
+  sitemap.add(Track,
+    :select           => "id, permalink, user_id, updated_at",
+    :include          => :user,
+    :conditions       => "public = 1 AND state = 'finished' AND user_id IS NOT NULL",
+    :order            => "id ASC",
+  )
+
+ If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
+
+
+=== Partial Update
+
+If you enable <code>:partial_update</code>, the filename will include an id smaller than the id of the first entry. This is perfect to update just the last file with new entries without the need to re-generate files being already there.
+
+=== Rails Routes
+
+To make use of your rails route helper, <code>include UrlWriter</code> and specify location:
+
+   include ActionController::UrlWriter
+
+   sitemap.add(Post,
+     :location => lambda {|post| post_url(post)}
+   )
+
+=== Lock Generation Process
+
+To prevent another process overwriting from the generated files, use the <code>with_lock</code> method:
+
+  sitemap.with_lock do
+    sitemap.generate
+  end
 
 === Cleaning the Sitemaps Directory
 
@@ -111,7 +151,8 @@ Thanks to those who have contributed patches:
 * Mislav Marohnić
 * Jeff Schoolcraft
 * Dalibor Nasevic
+* Tobias Bielohlawek (http://www.rngtng.com)
 
 == Copyright
 
-Copyright (c) 2009 Stateless Systems (http://statelesssystems.com). See LICENSE for details.
+Copyright (c) 2010 Stateless Systems (http://statelesssystems.com). See LICENSE for details.
