@@ -1,31 +1,34 @@
 = BigSitemap
 
-BigSitemap is a Sitemap (http://sitemaps.org) generator suitable for applications with greater than 50,000 URLs.  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries to minimize memory usage, supports increment updates, can be set up with just a few lines of code and is compatible with just about any framework.
+BigSitemap is a {Sitemap}[http://sitemaps.org] generator suitable for applications with greater than 50,000 URLs.  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, batches database queries to minimize memory usage, supports increment updates, can be set up with just a few lines of code and is compatible with just about any framework.
 
 BigSitemap is best run periodically through a Rake/Thor task.
 
   require 'big_sitemap'
 
-  sitemap = BigSitemap.new(:url_options => {:host => 'example.com'})
+  sitemap = BigSitemap.new(
+    :url_options   => {:host => 'example.com'},
+    :document_root => "#{APP_ROOT}/public'
+  )
 
   # Add a model
   sitemap.add Product
 
   # Add another model with some options
-  sitemap.add(Post, {
+  sitemap.add(Post,
     :conditions       => {:published => true},
     :path             => 'articles',
     :change_frequency => 'daily',
     :priority         => 0.5
-  })
+  )
 
   # Add a static resource
-  sitemap.add_static("http://example.com/about", Time.now, 'montly', 0.1)
+  sitemap.add_static('http://example.com/about', Time.now, 'monthly', 0.1)
 
   # Generate the files
   sitemap.generate
 
-The code above will create a minimum of three files:
+The code above will create a minimum of four files:
 
 1. public/sitemaps/sitemap_index.xml.gz
 2. public/sitemaps/sitemap_products.xml.gz
@@ -34,13 +37,17 @@ The code above will create a minimum of three files:
 
 If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_products_1.xml.gz</code>, <code>sitemap_products_2.xml.gz</code>, ...).
 
-If you're using Rails then the URLs for each database record are generated with the <code>polymorphic_url</code> helper.  That means that the URL for a record will be exactly what you would expect: generated with respect to the routing setup of your app.  In other contexts where this helper isn't available, the URLs are generated in the form:
+=== Framework-specific Classes
 
-  :base_url/:path/:to_param
+Use the framework-specific classes to take advantage of built-in shortcuts.
 
-If the <code>to_param</code> method does not exist, then <code>id</code> will be used.
+== Rails
 
+<code>BigSiteMapRails</code> includes <code>UrlWriter</code> (useful for making use of your Rails routes - see the Location URLs section) and deals with setting the <code>:document_root</code> and <code>:url_options</code> initialization options.
 
+== Merb
+
+<code>BigSitemapMerb</code> deals with setting the <code>:document_root</code> initialization option.
 
 == Install
 
@@ -50,11 +57,11 @@ Via gem:
 
 == Advanced
 
-=== Options
+=== Initialization Options
 
 * <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
 * <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. "https://example.com:8080/"
-* <code>:document_root</code> -- string defaults to <code>Rails.root</code> or <code>Merb.root</code> if available
+* <code>:document_root</code> -- string
 * <code>:path</code> -- string defaults to 'sitemaps', which places sitemap files under the <code>/sitemaps</code> directory
 * <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
 * <code>:batch_size</code> -- <code>1001</code> (not <code>1000</code> due to a bug in DataMapper)
@@ -65,28 +72,42 @@ Via gem:
 * <code>:ping_ask</code> -- <code>false</code>
 * <code>:partial_update</code> -- <code>false</code>
 
-
 === Chaining
 
-You can chain methods together.  You could even get away with as little code as:
+You can chain methods together:
 
   BigSitemap.new(:url_options => {:host => 'example.com'}).add(Post).generate
+
+With the Rails-specific class, you could even get away with as little code as:
+
+  BigSitemapRails.new.add(Post).generate
 
 === Pinging Search Engines
 
 To ping search engines, call <code>ping_search_engines</code> after you generate the sitemap:
 
-  sitemap.generate
-  sitemap.ping_search_engines
+  sitemap.generate.ping_search_engines
+
+=== Location URLs
+
+By default, URLs for the "loc" values are generated in the form:
+
+  :base_url/:path|<table_name>/<to_param>|<id>
+
+Alternatively, you can pass a lambda.  For example, to make use of your Rails route helper:
+
+  sitemap.add(Post,
+    :location => lambda { |post| post_url(post) }
+  )
 
 === Change Frequency, Priority and Last Modified
 
 You can control "changefreq", "priority" and "lastmod" values for each record individually by passing lambdas instead of fixed values:
 
   sitemap.add(Post,
-    :change_frequency => lambda {|post| ... },
-    :priority         => lambda {|post| ... },
-    :last_modified    => lambda {|post| ... }
+    :change_frequency => lambda { |post| ... },
+    :priority         => lambda { |post| ... },
+    :last_modified    => lambda { |post| ... }
   )
 
 === Find Methods
@@ -98,28 +119,17 @@ Additionally, you models must provide a <code>count_for_sitemap</code> or <code>
 If you're using ActiveRecord (Rails) or DataMapper then <code>all</code> and <code>count</code> are already provided and you can make use of any supported parameter: (:conditions, :limit, :joins, :select, :order, :include, :group)
 
   sitemap.add(Track,
-    :select           => "id, permalink, user_id, updated_at",
-    :include          => :user,
-    :conditions       => "public = 1 AND state = 'finished' AND user_id IS NOT NULL",
-    :order            => "id ASC",
+    :select     => "id, permalink, user_id, updated_at",
+    :include    => :user,
+    :conditions => "public = 1 AND state = 'finished' AND user_id IS NOT NULL",
+    :order      => "id ASC"
   )
 
- If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
-
+If you provide your own <code>find_for_sitemap</code> or <code>all</code> method then it should be able to handle the <code>:offset</code> and <code>:limit</code> options, in the same way that ActiveRecord and DataMapper handle them.  This is especially important if you have more than 50,000 URLs.
 
 === Partial Update
 
 If you enable <code>:partial_update</code>, the filename will include an id smaller than the id of the first entry. This is perfect to update just the last file with new entries without the need to re-generate files being already there.
-
-=== Rails Routes
-
-To make use of your rails route helper, <code>include UrlWriter</code> and specify location:
-
-   include ActionController::UrlWriter
-
-   sitemap.add(Post,
-     :location => lambda {|post| post_url(post)}
-   )
 
 === Lock Generation Process
 
@@ -135,18 +145,17 @@ Calling the <code>clean</code> method will remove all files from the Sitemaps di
 
 == Limitations
 
-If your database is likely to shrink during the time it takes to create the sitemap then you might run into problems (the final, batched SQL select will overrun by setting a limit that is too large since it is calculated from the count, which is queried at the very beginning).  Patches welcome!
+If your database is likely to shrink during the time it takes to create the sitemap then you might run into problems (the final, batched SQL select will overrun by setting a limit that is too large since it is calculated from the count, which is queried at the very beginning).  In this case and your database uses incremental primary IDs then you might want to use the <code>:partial_update</code> option, which looks at the last ID instead of paginating.
 
 == TODO
 
-Tests for Rails components.
+Tests for framework-specific components.
 
 == Credits
 
 Thanks to Alastair Brunton and Harry Love, who's work provided a starting point for this library.
-http://scoop.cheerfactory.co.uk/2008/02/26/google-sitemap-generator/
 
-Thanks to those who have contributed patches:
+Thanks also to those who have contributed patches:
 
 * Mislav Marohnić
 * Jeff Schoolcraft
