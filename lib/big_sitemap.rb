@@ -56,15 +56,24 @@ class BigSitemap
     Dir.mkdir(@file_path) unless File.exists? @file_path
 
     @sources       = []
+    @models        = []
     @sitemap_files = []
   end
 
   def add(model, options={})
+    @models << model
+
+    filename_suffix = @models.count(model) - 1
+
     options[:path]           ||= table_name(model)
     options[:filename]       ||= file_name(model)
     options[:primary_column] ||= 'id' if model.new.respond_to?('id')
     options[:partial_update]   = @options[:partial_update] && options[:partial_update] != false
+
+    options[:filename] << "_#{filename_suffix}" unless filename_suffix == 0
+
     @sources << [model, options.dup]
+
     self
   end
 

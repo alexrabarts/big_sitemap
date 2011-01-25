@@ -42,6 +42,16 @@ class BigSitemapTest < Test::Unit::TestCase
     assert !File.exists?(third_sitemaps_model_file), "#{third_sitemaps_model_file} does not exist"
   end
 
+  should 'generate two sitemap model files for the same model with different options' do
+    create_sitemap
+    add_model(:path => 'foo')
+    add_model(:path => 'bar')
+    @sitemap.generate
+
+    assert File.exists?(first_sitemaps_model_file), "#{first_sitemaps_model_file} exists"
+    assert File.exists?(second_sitemaps_model_file), "#{second_sitemaps_model_file} exists"
+  end
+
   context 'Sitemap index file' do
     should 'contain one sitemapindex element' do
       generate_sitemap_files
