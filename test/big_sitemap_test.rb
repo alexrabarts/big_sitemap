@@ -287,6 +287,32 @@ class BigSitemapTest < Test::Unit::TestCase
   end
 
   context 'partial update' do
+
+    context 'prepare_update' do
+      should 'generate correct condition for partial update' do
+        filename = "#{sitemaps_dir}/sitemap_test_models"
+
+        create_sitemap(:partial_update => true).clean
+        add_model(:num_items => 50) #TestModel
+
+        File.open("#{filename}_23.xml", 'w')
+        assert_equal "(id >= 23)", @sitemap.send(:prepare_update).first.last[:conditions]
+
+        File.open("#{filename}_42.xml", 'w')
+        assert_equal "(id >= 23) AND (id >= 42)", @sitemap.send(:prepare_update).first.last[:conditions]
+      end
+
+      should 'generate correct condition for partial update with custom column' do
+        filename = "#{sitemaps_dir}/sitemap_test_models"
+
+        create_sitemap(:partial_update => true).clean
+        add_model(:num_items => 50, :primary_column => 'name') #TestModel
+
+        File.open("#{filename}_666.xml", 'w')
+        assert_equal "(name >= 666)", @sitemap.send(:prepare_update).first.last[:conditions]
+      end
+    end
+
     should 'generate for all xml files in directory and delete last file' do
       TestModel.current_id = last_id = 27
       filename = "#{sitemaps_dir}/sitemap_test_models"
@@ -352,6 +378,24 @@ class BigSitemapTest < Test::Unit::TestCase
       #puts `cat /tmp/sitemaps/sitemap_test_models_41.xml`
 
       assert_equal 3, elements("#{filename}_46.xml", 'loc').size
+    end
+
+    context 'escape' do
+      should 'add if not number' do
+        create_sitemap
+        data = {
+           42 => 42,
+          '23' => 23,
+          "test" => "'test'",
+          "test10" => "'test10'",
+          "10test" => "'10test'",
+          "10t' est" => "'10t\\' est'",
+        }
+        data.each do |key, value|
+          assert_equal value, @sitemap.send(:escape_if_string, key)
+        end
+
+      end
     end
 
     context 'lockfile' do

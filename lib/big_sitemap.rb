@@ -161,8 +161,8 @@ class BigSitemap
 
             if last_id && primary_column
               find_options.update(:limit => limit, :offset => nil)
-              primary_column_value = last_id.to_s.gsub("'", %q(\\\')) #escape '
-              find_options.update(:conditions => [find_options[:conditions], "(#{primary_column} > '#{primary_column_value}')"].compact.join(' AND '))
+              primary_column_value = escape_if_string last_id #escape '
+              find_options.update(:conditions => [find_options[:conditions], "(#{primary_column} > #{primary_column_value})"].compact.join(' AND '))
             end
 
             model.send(find_method, find_options).each do |record|
@@ -238,7 +238,7 @@ class BigSitemap
             "appid=#{@options[:yahoo_app_id]}&url=#{sitemap_uri}"
         )
       else
-        $stderr.puts 'unable to ping Yahoo: no ":yahoo_app_id" provided'
+        STDERR.puts 'unable to ping Yahoo: no ":yahoo_app_id" provided'
       end
     end
 
@@ -267,9 +267,9 @@ class BigSitemap
   def prepare_update
     @files_to_move = []
     @sources.each do |model, options|
-      if options[:partial_update] && primary_column = options[:primary_column] && last_id = get_last_id(options[:filename])
-        primary_column_value       = last_id.to_s.gsub("'", %q(\\\')) #escape '
-        options[:conditions]       = [options[:conditions], "(#{primary_column} >= '#{primary_column_value}')"].compact.join(' AND ')
+      if options[:partial_update] && (primary_column = options[:primary_column]) && (last_id = get_last_id(options[:filename]))
+        primary_column_value       = escape_if_string last_id #escape '
+        options[:conditions]       = [options[:conditions], "(#{primary_column} >= #{primary_column_value})"].compact.join(' AND ')
         options[:start_part_id]    = last_id
       end
     end
@@ -326,6 +326,10 @@ class BigSitemap
       end
     end
     method
+  end
+
+  def escape_if_string(value)
+    (value.to_i.to_s == value.to_s) ?  value.to_i : "'#{value.gsub("'", %q(\\\'))}'"
   end
 
   def url_for_sitemap(path)
