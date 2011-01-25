@@ -5,10 +5,10 @@ begin
   Jeweler::Tasks.new do |s|
     s.name = "big_sitemap"
     s.summary = %Q{A Sitemap generator specifically designed for large sites (although it works equally well with small sites)}
-    s.email = %w(tobi@soundcloud.com alexrabarts@gmail.com)
-    s.homepage = "http://github.com/rngtng/big_sitemap"
+    s.email = %w(alexrabarts@gmail.com tobi@soundcloud.com)
+    s.homepage = "http://github.com/alexrabarts/big_sitemap"
     s.description = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
-    s.authors = ["Tobias Bielohlawek", "Alex Rabarts"]
+    s.authors = ["Alex Rabarts", "Tobias Bielohlawek"]
     s.add_dependency 'bundler'
   end
 rescue LoadError
