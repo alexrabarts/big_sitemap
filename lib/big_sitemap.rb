@@ -22,7 +22,7 @@ class BigSitemap
   TIMESTAMP_METHODS = [:updated_at, :updated_on, :updated, :created_at, :created_on, :created]
   PARAM_METHODS     = [:to_param, :id]
 
-  def initialize(options)
+  def initialize(options={})
     @options = DEFAULTS.merge options
 
     @default_url_options = options.delete(:default_url_options) || {}
@@ -82,7 +82,7 @@ class BigSitemap
       unlock!
     end
   rescue Errno::EACCES => e
-    STDERR.puts "Lockfile exists"
+    STDERR.puts 'Lockfile exists' if $VERBOSE
   end
 
   def table_name(model)
@@ -331,7 +331,7 @@ class BigSitemapRails < BigSitemap
 
   include ActionController::UrlWriter if defined? Rails
 
-  def initialize(options)
+  def initialize(options={})
     require 'action_controller'
 
     super options.merge(:default_url_options => default_url_options)
@@ -346,7 +346,7 @@ end
 
 class BigSitemapMerb < BigSitemap
 
-  def initialize(options)
+  def initialize(options={})
     require 'extlib'
     super
   end
