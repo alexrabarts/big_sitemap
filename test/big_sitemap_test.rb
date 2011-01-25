@@ -464,7 +464,7 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     def third_sitemaps_model_file
-      "#{sitemaps_dir}/sitemap_test_model_2.xml.gz"
+      "#{sitemaps_dir}/sitemap_test_models_2.xml.gz"
     end
 
     def sitemaps_dir
