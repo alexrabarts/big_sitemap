@@ -1,3 +1,13 @@
+=== 0.8.1 / 2010-01-25
+
+* API change: Rails/Merb are no longer automatically detected - use BigSitemapRails and BigSitemapMerb instead
+* API change: Rails' polymorphic_url helper is no longer used to generate URLs (use a lambda with the new :location option instead)
+* Static resources can now be added using the add_static method
+* Incremental updates are now available via the :partial_update option
+* "loc" URL values can now be generated with lambdas
+* Sitemap files can now be locked while being generated using the with_lock method
+* Several bug fixes
+
 === 0.5.1 / 2009-09-07
 
 * Fixes an issue with the :last_modified key being passed into the find method options
