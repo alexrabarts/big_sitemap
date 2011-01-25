@@ -8,7 +8,7 @@ BigSitemap is best run periodically through a Rake/Thor task.
 
   sitemap = BigSitemap.new(
     :url_options   => {:host => 'example.com'},
-    :document_root => "#{APP_ROOT}/public'
+    :document_root => "#{APP_ROOT}/public"
   )
 
   # Add a model
@@ -41,11 +41,11 @@ If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the 
 
 Use the framework-specific classes to take advantage of built-in shortcuts.
 
-== Rails
+==== Rails
 
 <code>BigSiteMapRails</code> includes <code>UrlWriter</code> (useful for making use of your Rails routes - see the Location URLs section) and deals with setting the <code>:document_root</code> and <code>:url_options</code> initialization options.
 
-== Merb
+==== Merb
 
 <code>BigSitemapMerb</code> deals with setting the <code>:document_root</code> initialization option.
 
@@ -60,9 +60,9 @@ Via gem:
 === Initialization Options
 
 * <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
-* <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. "https://example.com:8080/"
+* <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. <code>'https://example.com:8080/'</code>
 * <code>:document_root</code> -- string
-* <code>:path</code> -- string defaults to 'sitemaps', which places sitemap files under the <code>/sitemaps</code> directory
+* <code>:path</code> -- string defaults to <code>'sitemaps'</code>, which places sitemap files under the <code>/sitemaps</code> directory
 * <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
 * <code>:batch_size</code> -- <code>1001</code> (not <code>1000</code> due to a bug in DataMapper)
 * <code>:gzip</code> -- <code>true</code>
