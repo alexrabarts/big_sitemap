@@ -1,3 +1,8 @@
+=== 0.8.2 / 2010-01-25
+
+* Fixes an issue where sitemap files were not being generated if the same model
+  was added more than once (fixes issue #5: https://github.com/alexrabarts/big_sitemap/issues/#issue/5)
+
 === 0.8.1 / 2010-01-25
 
 * API change: Rails/Merb are no longer automatically detected - use BigSitemapRails and BigSitemapMerb instead
