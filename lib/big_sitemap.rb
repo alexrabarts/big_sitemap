@@ -338,10 +338,10 @@ end
 
 class BigSitemapRails < BigSitemap
 
-  include ActionController::UrlWriter if defined? Rails
 
   def initialize(options={})
     require 'action_controller'
+    include Rails.application.routes.url_helpers if defined? Rails
 
     super options.merge(:default_url_options => default_url_options)
   end
