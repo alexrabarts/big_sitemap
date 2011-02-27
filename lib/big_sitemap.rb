@@ -341,7 +341,9 @@ class BigSitemapRails < BigSitemap
 
   def initialize(options={})
     require 'action_controller'
-    include Rails.application.routes.url_helpers if defined? Rails
+    # I get undefined method `include' for BigSitemapRails ...
+    # I'm forced to include this module before calling BigSitemapRails
+    #include Rails.application.routes.url_helpers if defined? Rails
 
     super options.merge(:default_url_options => default_url_options)
   end
