@@ -46,8 +46,6 @@ class BigSitemap
       raise ArgumentError, '":batch_size" must be less than ":max_per_sitemap"'
     end
 
-    @options[:document_root] ||= document_root
-
     unless @options[:document_root]
       raise ArgumentError, 'Document root must be specified with the ":document_root" option'
     end
@@ -101,9 +99,6 @@ class BigSitemap
   def file_name(name)
     name = table_name(name) unless name.is_a? String
     "#{@file_path}/sitemap_#{name}"
-  end
-
-  def document_root
   end
 
   def clean
@@ -347,12 +342,10 @@ class BigSitemapRails < BigSitemap
   def initialize(options={})
     require 'action_controller'
 
-    super options.merge(:default_url_options => default_url_options)
+    DEFAULTS.merge!(:document_root => "#{Rails.root}/public", :url_options => default_url_options)
+    super(options)
   end
 
-  def document_root
-    "#{Rails.root}/public"
-  end
 end
 
 
@@ -361,11 +354,9 @@ class BigSitemapMerb < BigSitemap
 
   def initialize(options={})
     require 'extlib'
-    super
-  end
 
-  def document_root
-    "#{Merb.root}/public"
+    DEFAULTS.merge!(:document_root => "#{Merb.root}/public")
+    super(options)
   end
 
   def table_name(model)
