@@ -7,7 +7,7 @@ class BigSitemap
   DEFAULTS = {
     :max_per_sitemap => Builder::MAX_URLS,
     :batch_size      => 1001,
-    :path            => 'sitemaps',
+    :document_path   => 'sitemaps/',
     :gzip            => true,
 
     # opinionated
@@ -24,34 +24,31 @@ class BigSitemap
 
   def initialize(options={})
     @options = DEFAULTS.merge options
-
-    @default_url_options = options.delete(:default_url_options) || {}
+    @options[:document_path] ||= @options[:path] #for legacy reasons
 
     if @options[:max_per_sitemap] <= 1
       raise ArgumentError, '":max_per_sitemap" must be greater than 1'
     end
 
     if @options[:url_options]
-      @default_url_options.update @options[:url_options]
-    elsif @options[:base_url]
-      uri = URI.parse(@options[:base_url])
-      @default_url_options[:host]     = uri.host
-      @default_url_options[:port]     = uri.port
-      @default_url_options[:protocol] = uri.scheme
-    else
+      @options[:base_url] = URI::Generic.build( {:scheme => "http"}.merge(@options.delete(:url_options)) ).to_s
+    end
+
+    unless @options[:base_url]
       raise ArgumentError, 'you must specify either ":url_options" hash or ":base_url" string'
     end
+    @options[:url_path] ||= @options[:document_path]
 
     if @options[:batch_size] > @options[:max_per_sitemap]
       raise ArgumentError, '":batch_size" must be less than ":max_per_sitemap"'
     end
 
-    unless @options[:document_root]
-      raise ArgumentError, 'Document root must be specified with the ":document_root" option'
+    @options[:document_full] ||= File.join(@options[:document_root], @options[:document_path])
+    unless @options[:document_full]
+      raise ArgumentError, 'Document root must be specified with the ":document_root" option, the full path with ":document_full"'
     end
 
-    @file_path = "#{@options[:document_root]}/#{strip_leading_slash(@options[:path])}"
-    Dir.mkdir(@file_path) unless File.exists? @file_path
+    Dir.mkdir(@options[:document_full]) unless File.exists?(@options[:document_full])
 
     @sources       = []
     @models        = []
@@ -98,11 +95,15 @@ class BigSitemap
 
   def file_name(name)
     name = table_name(name) unless name.is_a? String
-    "#{@file_path}/sitemap_#{name}"
+    File.join(@options[:document_full], "sitemap_#{name}")
+  end
+
+  def dir_files
+    File.join(@options[:document_full], "sitemap_*.{xml,xml.gz}")
   end
 
   def clean
-    Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"].each do |file|
+    Dir[dir_files].each do |file|
       FileUtils.rm file
     end
     self
@@ -171,12 +172,12 @@ class BigSitemap
 
               param_method = pick_method(record, PARAM_METHODS)
 
-              location = options[:location]
-              if location.is_a?(Proc)
-                location = location.call(record)
-              else
-                location = "#{root_url}/#{strip_leading_slash(options[:path])}/#{record.send(param_method)}"
-              end
+              location =
+                if options[:location].is_a?(Proc)
+                  options[:location].call(record)
+                else
+                  File.join @options[:base_url], options[:path], record.send(param_method).to_s
+                end
 
               change_frequency = options[:change_frequency] || 'weekly'
               freq = change_frequency.is_a?(Proc) ? change_frequency.call(record) : change_frequency
@@ -206,7 +207,7 @@ class BigSitemap
 
   # Create a sitemap index document
   def generate_sitemap_index(files = nil)
-    files ||= Dir["#{@file_path}/sitemap_*.{xml,xml.gz}"]
+    files ||= Dir[dir_files]
     with_sitemap 'index', :type => 'index' do |sitemap|
       for path in files
         next if path =~ /index/
@@ -246,17 +247,6 @@ class BigSitemap
     end
   end
 
-  def root_url
-    @root_url ||= begin
-      url = ''
-      url << (@default_url_options[:protocol] || 'http')
-      url << '://' unless url.match('://')
-      url << @default_url_options[:host]
-      url << ":#{port}" if port = @default_url_options[:port] and port != 80
-      url
-    end
-  end
-
   private
 
   def prepare_update
@@ -271,11 +261,13 @@ class BigSitemap
   end
 
   def lock!(lock_file = 'generator.lock')
-    File.open("#{@file_path}/#{lock_file}", 'w', File::EXCL)
+    lock_file = File.join(@options[:document_full], lock_file)
+    File.open(lock_file, 'w', File::EXCL)
   end
 
   def unlock!(lock_file = 'generator.lock')
-    FileUtils.rm "#{@file_path}/#{lock_file}"
+    lock_file = File.join(@options[:document_full], lock_file)
+    FileUtils.rm lock_file
   end
 
   def with_sitemap(name, options={})
@@ -302,10 +294,6 @@ class BigSitemap
     end
   end
 
-  def strip_leading_slash(str)
-    str.sub(/^\//, '')
-  end
-
   def get_last_id(filename)
     Dir["#{filename}*.{xml,xml.gz}"].map do |file|
       file.to_s.scan(/#{filename}_(.+).xml/).flatten.last.to_i
@@ -328,7 +316,7 @@ class BigSitemap
   end
 
   def url_for_sitemap(path)
-    [root_url, @options[:path], File.basename(path)].compact.join('/')
+    File.join @options[:base_url], @options[:url_path], File.basename(path)
   end
 
 end

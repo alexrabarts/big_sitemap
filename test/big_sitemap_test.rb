@@ -17,10 +17,18 @@ class BigSitemapTest < Test::Unit::TestCase
 
   should 'generate the same base URL' do
     options = {:document_root => tmp_dir}
-    assert_equal(
-      BigSitemap.new(options.merge(:base_url => 'http://example.com')).root_url,
-      BigSitemap.new(options.merge(:url_options => {:host => 'example.com'})).root_url
-    )
+    url = 'http://example.com'
+    sitemap = BigSitemap.new(options.merge(:base_url => url))
+
+    assert_equal url, sitemap.instance_variable_get(:@options)[:base_url]
+  end
+
+  should 'generate the same base URL' do
+    options = {:document_root => tmp_dir}
+    url = 'http://example.com'
+    sitemap = BigSitemap.new(options.merge(:url_options => {:host => 'example.com'}))
+
+    assert_equal url, sitemap.instance_variable_get(:@options)[:base_url]
   end
 
   should 'generate a sitemap index file' do

@@ -61,8 +61,11 @@ Via gem:
 
 * <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
 * <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. <code>'https://example.com:8080/'</code>
+* <code>:url_path</code> -- string path_name to sitemaps folder, defaults to <code>:document_path</code>
 * <code>:document_root</code> -- string
-* <code>:path</code> -- string defaults to <code>'sitemaps'</code>, which places sitemap files under the <code>/sitemaps</code> directory
+* <code>:document_path</code> -- string document path to generation folder, relative to :document_root, defaults to <code>'sitemaps/'</code>
+* <code>:path</code> -- string, alias for ":document_path" for legacy reasons
+* <code>:document_full</code> -- string absolute document path to generation folder - defaults to <code>:document_root/:document_path</code>
 * <code>:max_per_sitemap</code> -- <code>50000</code>, which is the limit dictated by Google but can be less
 * <code>:batch_size</code> -- <code>1001</code> (not <code>1000</code> due to a bug in DataMapper)
 * <code>:gzip</code> -- <code>true</code>
