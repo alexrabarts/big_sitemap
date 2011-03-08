@@ -325,10 +325,12 @@ end
 
 class BigSitemapRails < BigSitemap
 
-  include ActionController::UrlWriter if defined? Rails
 
   def initialize(options={})
     require 'action_controller'
+    # I get undefined method `include' for BigSitemapRails ...
+    # I'm forced to include this module before calling BigSitemapRails
+    #include Rails.application.routes.url_helpers if defined? Rails
 
     DEFAULTS.merge!(:document_root => "#{Rails.root}/public", :url_options => default_url_options)
     super(options)
