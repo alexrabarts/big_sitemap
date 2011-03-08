@@ -338,6 +338,7 @@ end
 class BigSitemapMerb < BigSitemap
 
   def initialize(options={})
+    raise "No Merb Environment loaded" unless defined? Merb
     require 'extlib'
 
     DEFAULTS.merge!(:document_root => "#{Merb.root}/public")
