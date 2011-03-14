@@ -15,7 +15,7 @@ class BigSitemapTest < Test::Unit::TestCase
     assert_raise(ArgumentError) { BigSitemap.new(:document_root => tmp_dir) }
   end
 
-  should 'generate the same base URL' do
+  should 'generate the same base URL with :base_url option' do
     options = {:document_root => tmp_dir}
     url = 'http://example.com'
     sitemap = BigSitemap.new(options.merge(:base_url => url))
@@ -23,7 +23,7 @@ class BigSitemapTest < Test::Unit::TestCase
     assert_equal url, sitemap.instance_variable_get(:@options)[:base_url]
   end
 
-  should 'generate the same base URL' do
+  should 'generate the same base URL with :url_options option' do
     options = {:document_root => tmp_dir}
     url = 'http://example.com'
     sitemap = BigSitemap.new(options.merge(:url_options => {:host => 'example.com'}))
