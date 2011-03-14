@@ -1,9 +1,15 @@
-=== 0.8.2 / 2010-01-25
+=== 0.8.3 / 2011-03-08
+
+* Separate URL and file paths are now supported via the :document_path
+  and :url_path options
+* Fixes an issue when initializing in Rails 3
+
+=== 0.8.2 / 2011-01-25
 
 * Fixes an issue where sitemap files were not being generated if the same model
   was added more than once (fixes issue #5: https://github.com/alexrabarts/big_sitemap/issues/#issue/5)
 
-=== 0.8.1 / 2010-01-25
+=== 0.8.1 / 2011-01-25
 
 * API change: Rails/Merb are no longer automatically detected - use BigSitemapRails and BigSitemapMerb instead
 * API change: Rails' polymorphic_url helper is no longer used to generate URLs (use a lambda with the new :location option instead)
