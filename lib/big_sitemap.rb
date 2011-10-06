@@ -187,7 +187,7 @@ class BigSitemap
               pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
               last_id = primary_column ? record.send(primary_method) : nil
-              sitemap.add_url!(location, last_mod, freq, pri, last_id)
+              sitemap.add_url!(location, last_mod, freq, pri, last_id) if location
             end
           end
         end
