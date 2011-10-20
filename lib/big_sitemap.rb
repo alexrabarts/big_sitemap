@@ -132,7 +132,8 @@ class BigSitemap
           find_options[key] = options.delete(key)
         end
 
-        primary_column   = options.delete(:primary_column)
+        primary_method   = options.delete(:primary_column)
+        primary_column   = "#{table_name(model)}.#{primary_method}"
 
         count = model.send(count_method, find_options.merge(:select => (primary_column || '*'), :include => nil))
         count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
@@ -185,7 +186,7 @@ class BigSitemap
               priority = options[:priority]
               pri = priority.is_a?(Proc) ? priority.call(record) : priority
 
-              last_id = primary_column ? record.send(primary_column) : nil
+              last_id = primary_column ? record.send(primary_method) : nil
               sitemap.add_url!(location, last_mod, freq, pri, last_id)
             end
           end
@@ -254,7 +255,7 @@ class BigSitemap
     @sources.each do |model, options|
       if options[:partial_update] && (primary_column = options[:primary_column]) && (last_id = get_last_id(options[:filename]))
         primary_column_value       = escape_if_string last_id #escape '
-        options[:conditions]       = [options[:conditions], "(#{primary_column} >= #{primary_column_value})"].compact.join(' AND ')
+        options[:conditions]       = [options[:conditions], "(#{table_name(model)}.#{primary_column} >= #{primary_column_value})"].compact.join(' AND ')
         options[:start_part_id]    = last_id
       end
     end
