@@ -276,7 +276,7 @@ class BigSitemap
     options[:type]     ||= 'sitemap'
     options[:max_urls] ||= @options["max_per_#{options[:type]}".to_sym]
     options[:gzip]     ||= @options[:gzip]
-    options[:indent]     = options[:gzip] ? 0 : 2
+    options[:indent]   ||= 2
 
     sitemap = if options[:type] == 'index'
       IndexBuilder.new(options)

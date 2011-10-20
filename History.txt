@@ -1,3 +1,7 @@
+===
+
+* Gzipped files now include indents and newlines
+
 === 0.8.4 / 20011-10-20
 
 * Fixes an issue where joins where causing ambiguous "id" column

@@ -131,12 +131,10 @@ class BigSitemap
     end
 
     def _indent
-      return if @gzip
       target!.print "  " * @level
     end
 
     def _newline
-      return if @gzip
       target!.puts ''
     end
   end
