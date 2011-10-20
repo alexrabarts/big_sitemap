@@ -304,10 +304,10 @@ class BigSitemapTest < Test::Unit::TestCase
         add_model(:num_items => 50) #TestModel
 
         File.open("#{filename}_23.xml", 'w')
-        assert_equal "(id >= 23)", @sitemap.send(:prepare_update).first.last[:conditions]
+        assert_equal "(test_models.id >= 23)", @sitemap.send(:prepare_update).first.last[:conditions]
 
         File.open("#{filename}_42.xml", 'w')
-        assert_equal "(id >= 23) AND (id >= 42)", @sitemap.send(:prepare_update).first.last[:conditions]
+        assert_equal "(test_models.id >= 23) AND (test_models.id >= 42)", @sitemap.send(:prepare_update).first.last[:conditions]
       end
 
       should 'generate correct condition for partial update with custom column' do
@@ -317,7 +317,7 @@ class BigSitemapTest < Test::Unit::TestCase
         add_model(:num_items => 50, :primary_column => 'name') #TestModel
 
         File.open("#{filename}_666.xml", 'w')
-        assert_equal "(name >= 666)", @sitemap.send(:prepare_update).first.last[:conditions]
+        assert_equal "(test_models.name >= 666)", @sitemap.send(:prepare_update).first.last[:conditions]
       end
     end
 
