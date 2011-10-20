@@ -118,6 +118,18 @@ class BigSitemap
     self
   end
 
+  def init_find_options(options)
+    find_options = {}
+    [:conditions, :limit, :joins, :select, :order, :include, :group].each do |key|
+      find_options[key] = options.delete(key)
+    end
+    find_options
+  end
+  
+  def count_options(primary_column)
+    {:select => (primary_column || '*'), :include => nil}
+  end
+  
   def generate_models
     for model, options in @sources
       with_sitemap(model, options.dup) do |sitemap|
@@ -127,18 +139,13 @@ class BigSitemap
         raise ArgumentError, "#{model} must provide a count_for_sitemap class method" if count_method.nil?
         raise ArgumentError, "#{model} must provide a find_for_sitemap class method" if find_method.nil?
 
-        find_options = {}
-        [:conditions, :limit, :joins, :select, :order, :include, :group].each do |key|
-          find_options[key] = options.delete(key)
-        end
+        find_options = init_find_options(options)
 
         primary_column   = options.delete(:primary_column)
-
-        count = model.send(count_method, find_options.merge(:select => (primary_column || '*'), :include => nil))
+        count = model.send(count_method, find_options.merge(count_options(primary_column)))
         count = find_options[:limit].to_i if find_options[:limit] && find_options[:limit].to_i < count
         num_sitemaps = 1
         num_batches  = 1
-
         if count > @options[:batch_size]
           num_batches  = (count.to_f / @options[:batch_size].to_f).ceil
           num_sitemaps = (count.to_f / @options[:max_per_sitemap].to_f).ceil
@@ -149,8 +156,8 @@ class BigSitemap
           # Work out the start and end batch numbers for this sitemap
           batch_num_start = sitemap_num == 1 ? 1 : ((sitemap_num * batches_per_sitemap).ceil - batches_per_sitemap + 1).to_i
           batch_num_end   = (batch_num_start + [batches_per_sitemap, num_batches].min).floor - 1
-
           for batch_num in batch_num_start..batch_num_end
+            
             offset        = (batch_num - 1) * @options[:batch_size]
             limit         = (count - offset) < @options[:batch_size] ? (count - offset) : @options[:batch_size]
             find_options.update(:limit => limit, :offset => offset) if num_batches > 1
@@ -160,7 +167,6 @@ class BigSitemap
               primary_column_value = escape_if_string last_id #escape '
               find_options.update(:conditions => [find_options[:conditions], "(#{primary_column} > #{primary_column_value})"].compact.join(' AND '))
             end
-
             model.send(find_method, find_options).each do |record|
               last_mod = options[:last_modified]
               if last_mod.is_a?(Proc)
@@ -275,8 +281,7 @@ class BigSitemap
     options[:type]     ||= 'sitemap'
     options[:max_urls] ||= @options["max_per_#{options[:type]}".to_sym]
     options[:gzip]     ||= @options[:gzip]
-    options[:indent]     = options[:gzip] ? 0 : 2
-
+    options[:indent]     = 2 # options[:gzip] ? 2 : 2 even gzipped I like to have indentation
     sitemap = if options[:type] == 'index'
       IndexBuilder.new(options)
     elsif options[:geo]
@@ -358,3 +363,24 @@ class BigSitemapMerb < BigSitemap
   end
 
 end
+
+class BigSitemapMongoid < BigSitemapRails
+
+  def initialize(options={})
+    raise "No Mongoid Environment loaded" unless defined? Mongoid
+    super(options)
+  end
+
+  def table_name(model)
+    model.to_s.downcase
+  end
+  
+  def init_find_options(options)
+    {}
+  end
+  
+  def count_options(primary_column)
+    {}
+  end
+end
+

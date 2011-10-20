@@ -131,12 +131,12 @@ class BigSitemap
     end
 
     def _indent
-      return if @gzip
+      #return if @gzip even gzipped I like to have indentation
       target!.print "  " * @level
     end
 
     def _newline
-      return if @gzip
+      #return if @gzip even gzipped I like to have indentation
       target!.puts ''
     end
   end
