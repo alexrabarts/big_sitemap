@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "big_sitemap"
-  s.version = "0.8.4"
+  s.version = "0.8.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Alex Rabarts", "Tobias Bielohlawek"]
@@ -33,7 +33,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/alexrabarts/big_sitemap"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.11"
   s.summary = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
 
   if s.respond_to? :specification_version then
