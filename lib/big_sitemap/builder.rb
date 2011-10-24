@@ -14,35 +14,36 @@ class BigSitemap
       @gzip           = options.delete(:gzip)
       @max_urls       = options.delete(:max_urls) || MAX_URLS
       @type           = options.delete(:type)
-      @paths          = []
+      @filepaths      = []
       @parts          = options.delete(:start_part_id) || 0
-      @custom_part_nr = options.delete(:partial_update)
+      @partial_update = options.delete(:partial_update)
 
-      @filename = options.delete(:filename)
+      @filename         = options.delete(:filename)
       @current_filename = nil
       @tmp_filename     = nil
-      @target = _get_writer
+      @target           = _get_writer
 
       @level = 0
       @opened_tags = []
       _init_document
     end
 
-    def add_url!(url, time = nil, frequency = nil, priority = nil, part_nr = nil)
-      _rotate(part_nr) if @max_urls == @urls
-
+    def add_url!(location, options={})
+      _rotate(options[:id]) if @max_urls == @urls
       _open_tag 'url'
-      tag! 'loc', url
-      tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if time
-      tag! 'changefreq', frequency if frequency
-      tag! 'priority', priority if priority
+
+      tag! 'loc', location
+      tag! 'lastmod', options[:last_modified].utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if options[:last_modified]
+      tag! 'changefreq', options[:change_frequency] || 'weekly'
+      tag! 'priority', options[:priority] if options[:priority]
+
       _close_tag 'url'
 
       @urls += 1
     end
 
-    def paths!
-      @paths
+    def filepaths!
+      @filepaths
     end
 
     def close!
@@ -60,7 +61,7 @@ class BigSitemap
 
     def _get_writer
       filename = @filename.dup
-      filename << "_#{@parts}" if @parts > 0
+      filename << "_#{@parts}" if @parts > 0 && @type != 'index'
       filename << '.xml'
       filename << '.gz' if @gzip
       _open_writer(filename)
@@ -69,28 +70,28 @@ class BigSitemap
     def _open_writer(filename)
       @current_filename = filename
       @tmp_filename     = filename + ".tmp"
-      @paths << filename
-      file = ::File.open(@tmp_filename, 'w+')
+      @filepaths << filename
+      file = ::File.open(@tmp_filename, 'w+:ASCII-8BIT')
       @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 
-    def _init_document( name = 'urlset', attrs = HEADER_ATTRIBUTES)
+    def _init_document(name='urlset', attrs=HEADER_ATTRIBUTES)
       @urls = 0
       target!.print '<?xml version="1.0" encoding="UTF-8"?>'
       _newline
       _open_tag name, attrs
     end
 
-    def _rotate(part_nr = nil)
+    def _rotate(part_nr=nil)
       # write out the current document and start writing into a new file
       close!
-      @parts = (part_nr && @custom_part_nr) ? part_nr : @parts + 1
+      @parts = part_nr || @parts + 1
       @target = _get_writer
       _init_document
     end
 
     # opens a tag, bumps up level but doesn't require a block
-    def _open_tag(name, attrs = {})
+    def _open_tag(name, attrs={})
       _indent
       _start_tag(name, attrs)
       _newline
@@ -98,8 +99,8 @@ class BigSitemap
       @opened_tags << name
     end
 
-    def _start_tag(name, attrs = {})
-      attrs = attrs.map { |attr,value| %Q( #{attr}="#{value}") }.join('')
+    def _start_tag(name, attrs={})
+      attrs = attrs.map { |attr, value| %Q( #{attr}="#{value}") }.join('')
       target!.print "<#{name}#{attrs}>"
     end
 
@@ -145,10 +146,12 @@ class BigSitemap
       super(name, attrs)
     end
 
-    def add_url!(url, time = nil)
+    def add_url!(location, options={})
       _open_tag 'sitemap'
-      tag! 'loc', url
-      tag! 'lastmod', time.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if time
+
+      tag! 'loc', location
+      tag! 'lastmod', options[:last_modified].utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if options[:last_modified]
+
       _close_tag 'sitemap'
     end
   end

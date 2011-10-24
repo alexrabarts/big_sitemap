@@ -1,3 +1,13 @@
+=== 1.0.0 / 2011-10-24
+
+* API Change: Sitemaps are now generated using a block syntax.  Find methods are no longer the responsibility of BigSitemap.  Instead, sitemaps are generated using a block, in which you call your own find methods, passing the results to BigSitemap with the 'add' method.  See the README for details.
+* BigSitemapRails and BigSitemapMerb are now BigSitemap::Rails and BigSitemap::Merb, respectively.
+* Sitemap files are now placed in the document root by default
+* Sitemaps are now automatically cleaned before generating the new set
+* Search engines are now pinged automatically when the sitemap is generated
+* Lock files are now generated automatically
+* Sitemap files are no longer split amongst your models
+
 === 0.8.5 / 2011-10-20
 
 * Gzipped files now include indents and newlines

@@ -1,6 +1,6 @@
 class TestModel
   def to_param
-    id #|| object_id
+    id
   end
 
   def id
