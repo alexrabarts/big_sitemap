@@ -4,10 +4,11 @@ require 'zlib'
 class BigSitemap
   class Builder
     MAX_URLS = 50000
+    HEADER_NAME = 'urlset'
     HEADER_ATTRIBUTES = {
       'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9',
       'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
-      'xsi:schemaLocation' => "http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" 
+      'xsi:schemaLocation' => "http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
     }
 
     def initialize(options)
@@ -75,11 +76,11 @@ class BigSitemap
       @gzip ? ::Zlib::GzipWriter.new(file) : file
     end
 
-    def _init_document(name='urlset', attrs=HEADER_ATTRIBUTES)
+    def _init_document
       @urls = 0
       target!.print '<?xml version="1.0" encoding="UTF-8"?>'
       _newline
-      _open_tag name, attrs
+      _open_tag self.class::HEADER_NAME, self.class::HEADER_ATTRIBUTES
     end
 
     def _rotate(part_nr=nil)
@@ -141,10 +142,10 @@ class BigSitemap
   end
 
   class IndexBuilder < Builder
-    def _init_document(name = 'sitemapindex', attrs = {'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'})
-      attrs.merge('xmlns:geo' => "http://www.google.com/geo/schemas/sitemap/1.0")
-      super(name, attrs)
-    end
+    HEADER_NAME = 'sitemapindex'
+    HEADER_ATTRIBUTES = {
+      'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
+    }
 
     def add_url!(location, options={})
       _open_tag 'sitemap'
