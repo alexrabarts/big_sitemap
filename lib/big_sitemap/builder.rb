@@ -156,14 +156,5 @@ class BigSitemap
     end
   end
 
-  class GeoBuilder < Builder
-    #_build_geo if @geo
-
-    # def _build_geo
-    #   geo :geo do
-    #     geo :format, 'kml'
-    #   end
-    # end
-  end
 
 end
