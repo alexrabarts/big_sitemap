@@ -179,7 +179,7 @@ class BigSitemap
 
     with_sitemap do |builder|
       @paths.each do |path, options|
-        url = File.join @options[:base_url], File.path(path)
+        url = URI.join(@options[:base_url], path)
         builder.add_url! url, options
       end
     end
