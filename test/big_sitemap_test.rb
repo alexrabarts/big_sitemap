@@ -44,12 +44,12 @@ class BigSitemapTest < Test::Unit::TestCase
   should 'should add paths' do
     generate_sitemap do
       add '/', {:last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5}
-      add '/about', {:last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5}
+      add '/navigation/about/us', {:last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5}
     end
 
     elems = elements first_sitemap_file, 'loc'
     assert_equal 'http://example.com/', elems.first.text
-    assert_equal 'http://example.com/about', elems.last.text
+    assert_equal 'http://example.com/navigation/about/us', elems.last.text
   end
 
   context 'Sitemap index file' do
