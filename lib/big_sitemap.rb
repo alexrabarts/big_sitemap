@@ -381,9 +381,6 @@ class BigSitemap
 
     sitemap = if options[:type] == 'index'
       IndexBuilder.new(options)
-    elsif options[:geo]
-      options[:filename] << '_kml'
-      GeoBuilder.new(options)
     else
       Builder.new(options)
     end
