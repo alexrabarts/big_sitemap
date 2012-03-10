@@ -260,6 +260,9 @@ class BigSitemap
           find_options[key] = options.delete(key)
         end
 
+        # Keep the intial conditions for later user
+        conditions = find_options[:conditions]
+
         primary_method   = options.delete(:primary_column)
         primary_column   = "#{table_name(model)}.#{primary_method}"
 
@@ -287,7 +290,7 @@ class BigSitemap
             if last_id && primary_column
               find_options.update(:limit => limit, :offset => nil)
               primary_column_value = escape_if_string last_id #escape '
-              find_options.update(:conditions => [find_options[:conditions], "(#{primary_column} > #{primary_column_value})"].compact.join(' AND '))
+              find_options[:conditions] = [conditions, "(#{primary_column} > #{primary_column_value})"].compact.join(' AND ')
             end
 
             model.send(find_method, find_options).each do |record|
