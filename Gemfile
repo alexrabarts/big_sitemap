@@ -1,14 +1,2 @@
-source :rubygems
-
-gem 'rake'
-gem 'rdoc'
-
-group :development do
-  gem 'jeweler'
-end
-
-group :test do
-  gem 'shoulda'
-  gem 'mocha'
-  gem 'nokogiri'
-end
+# Specify your gem's dependencies in big_sitemap.gemspec
+gemspec

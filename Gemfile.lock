@@ -1,27 +1,22 @@
-GEM
-  remote: http://rubygems.org/
+PATH
+  remote: .
   specs:
-    git (1.2.5)
-    jeweler (1.6.4)
-      bundler (~> 1.0)
-      git (>= 1.2.5)
-      rake
-    json (1.6.1)
+    big_sitemap (1.0.1)
+
+GEM
+  specs:
     mocha (0.9.10)
       rake
     nokogiri (1.4.4)
     rake (0.8.7)
-    rdoc (3.11)
-      json (~> 1.4)
     shoulda (2.11.3)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  jeweler
+  big_sitemap!
+  bundler
   mocha
   nokogiri
-  rake
-  rdoc
   shoulda
