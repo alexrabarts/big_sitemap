@@ -1,3 +1,7 @@
+=== 1.0.1 / 2012-03-10
+
+* Fixes an issue generating correct URL paths
+
 === 1.0.0 / 2011-10-24
 
 * API Change: Sitemaps are now generated using a block syntax.  Find methods are no longer the responsibility of BigSitemap.  Instead, sitemaps are generated using a block, in which you call your own find methods, passing the results to BigSitemap with the 'add' method.  See the README for details.
