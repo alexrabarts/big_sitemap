@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "big_sitemap"
-  s.version = "1.0.0"
+  s.version = "1.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Alex Rabarts", "Tobias Bielohlawek"]
-  s.date = "2011-10-24"
+  s.date = "2012-03-10"
   s.description = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
   s.email = ["alexrabarts@gmail.com", "tobi@soundcloud.com"]
   s.extra_rdoc_files = [
@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION.yml",
+    "big_sitemap.gemspec",
     "lib/big_sitemap.rb",
     "lib/big_sitemap/builder.rb",
     "test/big_sitemap_test.rb",
@@ -32,7 +33,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/alexrabarts/big_sitemap"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.11"
+  s.rubygems_version = "1.8.10"
   s.summary = "A Sitemap generator specifically designed for large sites (although it works equally well with small sites)"
 
   if s.respond_to? :specification_version then
