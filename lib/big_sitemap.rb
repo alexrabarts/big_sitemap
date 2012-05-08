@@ -47,6 +47,18 @@ class BigSitemap
     def add(path, options={})
       @sitemap.add_path(path, options)
     end
+
+    def add_collection(collection, url_method='url_for_sitemap', options={})
+      collection.each do |member|
+          add member.send(url_method), options
+      end
+    end
+
+    def add_static_collection(collection, options={})
+      collection.each do |member|
+        add member, options
+      end
+    end
   end
 
   def initialize(options={})

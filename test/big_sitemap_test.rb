@@ -52,6 +52,27 @@ class BigSitemapTest < Test::Unit::TestCase
     assert_equal 'http://example.com/navigation/about/us', elems.last.text
   end
 
+  should 'add to dynamic collection to sitemap' do
+    generate_sitemap do
+      add_collection TestModel.find_for_sitemap(:limit => 3), 'url_for_sitemap', {:last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5}
+    end
+
+    elems = elements first_sitemap_file, 'loc'
+    assert_equal 3, elems.size
+  end
+
+  should 'add to static collection to sitemap' do
+    generate_sitemap do
+      static_pages_for_sitemap = %w(/terms_and_conditions /privacy_policy /contact_us)
+      add_static_collection static_pages_for_sitemap, {:last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5}
+    end
+
+    elems = elements first_sitemap_file, 'loc'
+    assert_equal 3, elems.size
+    assert_equal 'http://example.com/terms_and_conditions', elems.first.text
+    assert_equal 'http://example.com/contact_us', elems.last.text
+  end
+
   context 'Sitemap index file' do
     should 'contain one sitemapindex element' do
       generate_sitemap { add '/' }
