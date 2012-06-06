@@ -75,7 +75,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain two loc elements' do
       generate_sitemap(:max_per_sitemap => 2) do
-        4.times { add '/' }
+        4.times { |i| add "/#{i}" }
       end
 
       assert_equal 2, num_elements(sitemaps_index_file, 'loc')
@@ -83,7 +83,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain two lastmod elements' do
       generate_sitemap(:max_per_sitemap => 2) do
-        4.times { add '/' }
+        4.times { |i| add "/#{i}" }
       end
 
       assert_equal 2, num_elements(sitemaps_index_file, 'lastmod')
@@ -103,7 +103,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain several loc elements' do
       generate_sitemap do
-        3.times { add '/' }
+        3.times { |i| add "/#{i}" }
       end
 
       assert_equal 3, num_elements(first_sitemap_file, 'loc')
@@ -111,7 +111,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain several lastmod elements' do
       generate_sitemap do
-        3.times { add '/', :last_modified => Time.now }
+        3.times { |i| add "/#{i}", :last_modified => Time.now }
       end
 
       assert_equal 3, num_elements(first_sitemap_file, 'lastmod')
@@ -119,7 +119,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain several changefreq elements' do
       generate_sitemap do
-        3.times { add '/' }
+        3.times { |i| add "/#{i}" }
       end
 
       assert_equal 3, num_elements(first_sitemap_file, 'changefreq')
@@ -127,7 +127,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain several priority elements' do
       generate_sitemap do
-        3.times { add '/', :priority => 0.2 }
+        3.times { |i| add "/#{i}", :priority => 0.2 }
       end
 
       assert_equal 3, num_elements(first_sitemap_file, 'priority')
@@ -153,7 +153,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain two loc element' do
       generate_sitemap(:max_per_sitemap => 2) do
-        4.times { add '/' }
+        4.times { |i| add "/#{i}" }
       end
 
       assert_equal 2, num_elements(first_sitemap_file, 'loc')
@@ -162,7 +162,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain two changefreq elements' do
       generate_sitemap(:max_per_sitemap => 2) do
-        4.times { add '/' }
+        4.times { |i| add "/#{i}" }
       end
 
       assert_equal 2, num_elements(first_sitemap_file, 'changefreq')
@@ -171,7 +171,7 @@ class BigSitemapTest < Test::Unit::TestCase
 
     should 'contain two priority element' do
       generate_sitemap(:max_per_sitemap => 2) do
-        4.times { add '/', :priority => 0.2 }
+        4.times { |i| add "/#{i}", :priority => 0.2 }
       end
 
       assert_equal 2, num_elements(first_sitemap_file, 'priority')
@@ -181,6 +181,14 @@ class BigSitemapTest < Test::Unit::TestCase
     should 'not be gzipped' do
       generate_sitemap(:gzip => false) { add '/' }
       assert File.exists?(unzipped_first_sitemap_file)
+    end
+
+    should 'contain unique elements' do
+      generate_sitemap do
+        2.times { add '/' }
+      end
+
+      assert_equal 1, num_elements(first_sitemap_file, 'url')
     end
   end
 
