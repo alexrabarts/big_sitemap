@@ -232,7 +232,7 @@ class BigSitemap
     end
 
     if @options[:ping_yandex]
-      Net::HTTP.get('http://webmaster.yandex.ru', "/wmconsole/sitemap_list.xml?host=#{sitemap_uri}")
+      Net::HTTP.get('webmaster.yandex.ru', "/wmconsole/sitemap_list.xml?host=#{sitemap_uri}")
     end
   end
 
