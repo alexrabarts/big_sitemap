@@ -64,6 +64,7 @@ Via gem:
 * <code>:ping_yahoo</code> -- <code>false</code>, needs <code>:yahoo_app_id</code>
 * <code>:ping_bing</code> -- <code>false</code>
 * <code>:ping_ask</code> -- <code>false</code>
+* <code>:ping_yandex</code> -- <code>true</code>
 * <code>:partial_update</code> -- <code>false</code>
 
 === Change Frequency, Priority and Last Modified
