@@ -7,9 +7,14 @@ class BigSitemap
     HEADER_NAME = 'urlset'
     HEADER_ATTRIBUTES = {
       'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9',
+      'xmlns:video' => "http://www.google.com/schemas/sitemap-video/1.1",
       'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
       'xsi:schemaLocation' => "http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
     }
+
+    # as per http://support.google.com/webmasters/bin/answer.py?hl=en&answer=80472#1
+    VIDEO_ATTRIBUTES = %w(thumbnail_loc title description content_loc player_loc duration expiration_date rating view_count
+                          publication_date family_friendly restriction gallery_loc price requires_subscription uploader platform live)
 
     def initialize(options)
       @gzip           = options.delete(:gzip)
@@ -37,6 +42,26 @@ class BigSitemap
       tag! 'lastmod', options[:last_modified].utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if options[:last_modified]
       tag! 'changefreq', options[:change_frequency] || 'weekly'
       tag! 'priority', options[:priority] if options[:priority]
+
+      if options[:video]
+        _open_tag 'video:video'
+
+          options[:video].each do |attribute, value_or_hash|
+            if value_or_hash.is_a?(Hash)
+              tag_value = value_or_hash.delete(:value)
+              opts      = value_or_hash
+            else
+              tag_value = value_or_hash
+              opts      = {}
+            end
+
+            tag_value = tag_value.utc.strftime('%Y-%m-%dT%H:%M:%S+00:00') if attribute.to_s[0..-5] == "_date"
+
+            tag! "video:#{attribute}", tag_value, opts
+          end
+
+        _close_tag 'video:video'
+      end
 
       _close_tag 'url'
 

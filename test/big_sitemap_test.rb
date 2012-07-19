@@ -59,17 +59,17 @@ class BigSitemapTest < Test::Unit::TestCase
     end
 
     should 'contain one sitemap element' do
-      generate_sitemap { add '/' }  
+      generate_sitemap { add '/' }
       assert_equal 1, num_elements(sitemaps_index_file, 'sitemap')
     end
 
     should 'contain one loc element' do
-      generate_sitemap { add '/' }  
+      generate_sitemap { add '/' }
       assert_equal 1, num_elements(sitemaps_index_file, 'loc')
     end
 
     should 'contain one lastmod element' do
-      generate_sitemap { add '/' }  
+      generate_sitemap { add '/' }
       assert_equal 1, num_elements(sitemaps_index_file, 'lastmod')
     end
 
@@ -176,6 +176,24 @@ class BigSitemapTest < Test::Unit::TestCase
 
       assert_equal 2, num_elements(first_sitemap_file, 'priority')
       assert_equal 2, num_elements(second_sitemap_file, 'priority')
+    end
+
+    should 'allow adding video elements' do
+      video_title = "Maru Motel"
+      video_url   = "http://www.youtube.com/embed/cvnPBZbth3E?rel=0"
+      video_date  = Time.mktime(2010, 8, 29)
+
+      generate_sitemap do
+        add '/', :video => { :title            => video_title,
+                             :player_loc       => { :value       => video_url,
+                                                    :allow_embed => true },
+                             :publication_date => video_date
+                           }
+      end
+
+      assert_equal video_title, elements(first_sitemap_file, "*[name()='video:title']").first.text
+      assert_equal video_url,   elements(first_sitemap_file, "*[name()='video:player_loc']").first.text
+      assert_equal "true",      elements(first_sitemap_file, "*[name()='video:player_loc']").first.attributes["allow_embed"].value
     end
 
     should 'not be gzipped' do
