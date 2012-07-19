@@ -5,10 +5,10 @@ PATH
 
 GEM
   specs:
-    mocha (0.9.10)
-      rake
+    metaclass (0.0.1)
+    mocha (0.12.0)
+      metaclass (~> 0.0.1)
     nokogiri (1.4.4)
-    rake (0.8.7)
     shoulda (2.11.3)
 
 PLATFORMS

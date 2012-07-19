@@ -55,13 +55,13 @@ class Test::Unit::TestCase
   end
 
   def ns
-    {'s' => 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+    {'s' => 'http://www.sitemaps.org/schemas/sitemap/0.9', 'v' => "http://www.google.com/schemas/sitemap-video/1.1"}
   end
 
   def elements(filename, el)
     file_class = filename.include?('.gz') ? Zlib::GzipReader : File
     data = Nokogiri::XML.parse(file_class.open(filename).read)
-    data.search("//s:#{el}", ns)
+    data.search("//s:#{el}", "//v:#{el}", ns)
   end
 
   def num_elements(filename, el)
