@@ -15,7 +15,7 @@ class BigSitemap
     :ping_yahoo  => false, # needs :yahoo_app_id
     :ping_bing   => false,
     :ping_ask    => false, 
-    :ping_yandex => true
+    :ping_yandex => false
   }
 
   # TODO: Deprecate
