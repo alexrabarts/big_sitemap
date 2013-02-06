@@ -14,7 +14,8 @@ class BigSitemap
     :ping_google => true,
     :ping_yahoo  => false, # needs :yahoo_app_id
     :ping_bing   => false,
-    :ping_ask    => false
+    :ping_ask    => false, 
+    :ping_yandex => false
   }
 
   # TODO: Deprecate
@@ -229,6 +230,10 @@ class BigSitemap
 
     if @options[:ping_ask]
       Net::HTTP.get('submissions.ask.com', "/ping?sitemap=#{sitemap_uri}")
+    end
+
+    if @options[:ping_yandex]
+      Net::HTTP.get('webmaster.yandex.ru', "/wmconsole/sitemap_list.xml?host=#{sitemap_uri}")
     end
   end
 
