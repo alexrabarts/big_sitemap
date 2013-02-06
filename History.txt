@@ -1,3 +1,8 @@
+=== 1.1.0 / 2013-02-06
+
+* Yandex is now also pinged when the sitemap is updated
+* Deprecated methods from v1.0.0 now removed
+
 === 1.0.2 / 2013-02-06
 
 * Fixes an issue with duplicate URLs
