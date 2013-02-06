@@ -178,6 +178,7 @@ class BigSitemap
     return self if Array(@paths).empty?
 
     with_sitemap do |builder|
+      @paths.uniq!
       @paths.each do |path, options|
         url = URI.join(@options[:base_url], path)
         builder.add_url! url, options
