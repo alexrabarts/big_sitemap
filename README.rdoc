@@ -52,7 +52,7 @@ Via gem:
 
 === Initialization Options
 
-* <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:protocol</code>
+* <code>:url_options</code> -- hash with <code>:host</code>, optionally <code>:port</code> and <code>:scheme</code>
 * <code>:base_url</code> -- string alternative to <code>:url_options</code>, e.g. <code>'https://example.com:8080/'</code>
 * <code>:url_path</code> -- string path_name to sitemaps folder, defaults to <code>:document_path</code>
 * <code>:document_root</code> -- string
