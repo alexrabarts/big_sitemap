@@ -1,4 +1,5 @@
 = BigSitemap
+{<img src="https://travis-ci.org/alexrabarts/big_sitemap.png" alt="Build Status" />}[https://travis-ci.org/alexrabarts/big_sitemap]
 
 BigSitemap is a {Sitemap}[http://sitemaps.org] generator suitable for applications with greater than 50,000 URLs.  It splits large Sitemaps into multiple files, gzips the files to minimize bandwidth usage, supports increment updates, can be set up with just a few lines of code and is compatible with just about any framework.
 
