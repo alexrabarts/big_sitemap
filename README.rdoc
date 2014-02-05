@@ -21,6 +21,13 @@ BigSitemap is best run periodically through a Rake/Thor task.
     Product.find(:all).each do |product|
       add product_path(product), :change_frequency => 'daily', :priority => 0.5
     end
+
+    # Add a dynamic collection (using a scope) and calling a method for (vanity) URL to add
+    add_collection Product.live_products, 'method_to_call_for_url'
+
+    # Add a static collection of pages - useful for batching similar pages together and keeping things DRY and managable
+    static_pages_for_sitemap = %w(/terms_and_conditions /privacy_policy /contact_us)
+    add_static_collection static_pages_for_sitemap, :last_modified => Time.now, :change_frequency => 'weekly', :priority => 0.5
   end
 
 The code above will create a minimum of two files:

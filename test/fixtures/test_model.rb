@@ -19,6 +19,10 @@ class TestModel
     Time.at(1000000000)
   end
 
+  def url_for_sitemap
+    '/test_model/' + id.to_s
+  end
+
   class << self
     def table_name
       'test_models'

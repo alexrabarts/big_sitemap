@@ -4,7 +4,7 @@ require 'bundler/setup'
 require 'test/unit'
 require 'shoulda'
 require 'mocha'
-require 'test/fixtures/test_model'
+require File.expand_path('fixtures/test_model')
 
 require 'big_sitemap'
 
