@@ -25,8 +25,18 @@ BigSitemap is best run periodically through a Rake/Thor task.
 
 The code above will create a minimum of two files:
 
-1. public/sitemaps/sitemap_index.xml.gz
-2. public/sitemaps/sitemap.xml.gz
+1. public/sitemap_index.xml.gz
+2. public/sitemap.xml.gz
+
+Before version 1.0.0, the files were created by default in <code>public/sitemaps</code>, if you want to store them in the sitemaps
+directory, you have to specify the <code>document_path</code> option:
+  
+  BigSitemap.generate(  :url_options =>   {:host => 'example.com'}, 
+                        :document_root => "#{APP_ROOT}/public/", 
+                        :document_path => "sitemaps"
+                      ) do
+    ...
+  end
 
 If your sitemaps grow beyond 50,000 URLs (this limit can be overridden with the <code>:max_per_sitemap</code> option), the sitemap files will be partitioned into multiple files (<code>sitemap_1.xml.gz</code>, <code>sitemap_2.xml.gz</code>, ...).
 
