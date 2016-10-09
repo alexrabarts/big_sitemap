@@ -36,7 +36,7 @@ Use the framework-specific classes to take advantage of built-in shortcuts.
 
 ==== Rails
 
-<code>BigSiteMapRails</code> deals with setting the <code>:document_root</code> and <code>:url_options</code> initialization options.
+<code>BigSitemapRails</code> deals with setting the <code>:document_root</code> and <code>:url_options</code> initialization options.
 
 ==== Merb
 
